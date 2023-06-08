@@ -24,7 +24,7 @@ def main():
             return country, 201
         return {"error": "Request must be JSON"}, 415
     
-    app.run()
+    app.run(host='0.0.0.0')
 
 if __name__ == '__main__':
     main()
