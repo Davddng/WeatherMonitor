@@ -1,26 +1,24 @@
 import serial
+import RPi.GPIO as GPIO
 
-# Desc: Formats sensor data into dict
+# Desc: Updates sensor data on readings variable
 # Args: data - Data read from sensor
-# Returns: Dictionary containing sensor values
-def parseData(data):
-    readings = {
-        "pm1" : data[2] << 8 | data[3],
-        "pm25" : data[4] << 8 | data[5],
-        "pm10" : data[6] << 8 | data[7],
-        "pm1env" : data[8] << 8 | data[9],
-        "pm25env" : data[10] << 8 | data[11],
-        "pm10env" : data[12] << 8 | data[13],
-        "pbd3" : data[14] << 8 | data[15],
-        "pbd5" : data[16] << 8 | data[17],
-        "pbd10" : data[18] << 8 | data[19],
-        "pbd25" : data[20] << 8 | data[21],
-        "pbd50" : data[22] << 8 | data[23],
-        "pbd100" : data[24] << 8 | data[25],
-        "reserved" : data[26] << 8 | data[27],
-        "checksum" : data[28] << 8 | data[29],
-        "error" : 0
-    }
+def parseData(data, readings):
+    readings["pm1"] = data[2] << 8 | data[3]
+    readings["pm25"] = data[4] << 8 | data[5]
+    readings["pm10"] = data[6] << 8 | data[7]
+    readings["pm1env"] = data[8] << 8 | data[9]
+    readings["pm25env"] = data[10] << 8 | data[11]
+    readings["pm10env"] = data[12] << 8 | data[13]
+    readings["pbd3"] = data[14] << 8 | data[15]
+    readings["pbd5"] = data[16] << 8 | data[17]
+    readings["pbd10"] = data[18] << 8 | data[19]
+    readings["pbd25"] = data[20] << 8 | data[21]
+    readings["pbd50"] = data[22] << 8 | data[23]
+    readings["pbd100"] = data[24] << 8 | data[25]
+    readings["reserved"] = data[26] << 8 | data[27]
+    readings["checksum"] = data[28] << 8 | data[29]
+    readings["error"] = 0
     
     # Checksum calculation
     checksum = 0x42 + 0x4d
@@ -30,12 +28,23 @@ def parseData(data):
     if checksum != readings['checksum']:
         readings['error'] = 1
     
-    return readings
 
-# Desc: Reads sensor data
+# Desc: Turn sensor on or off
+# Args: state - true = on, false = off
+def setSensorState(state): 
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(18,GPIO.OUT)
+
+    if state:
+        GPIO.output(18,GPIO.HIGH)
+    else:
+        GPIO.output(18,GPIO.LOW)
+
+
+# Desc: Reads sensor data into the provided 'readings' variable
 # Args: serial - Serial connection eg. serial.Serial("/dev/ttyS0", 9600)
-# Returns: Dictionary containing sensor values
-def readData(serial):
+def readData(serial, readings):
     
     serial.reset_input_buffer()
     
@@ -53,10 +62,11 @@ def readData(serial):
                 return -1
 
     sensorData = serial.read(30)
-    return parseData(sensorData)
+    parseData(sensorData, readings)
 
 
 if __name__ == '__main__':
-    data = readData(serial.Serial("/dev/ttyS0", 9600))
-    print(data)
+    readings = {}
+    readData(serial.Serial("/dev/ttyS0", 9600), readings)
+    print(readings)
 
