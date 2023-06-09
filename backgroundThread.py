@@ -69,8 +69,8 @@ class weatherSampler(BackgroundThread):
     def startup(self) -> None:
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
-        self.updateWeatherData(self)
-        schedule.every(15).seconds.do(self.updateWeatherData(self))
+        self.updateWeatherData()
+        schedule.every(15).seconds.do(self.updateWeatherData)
         # TODO: Implement device startup
         
 
