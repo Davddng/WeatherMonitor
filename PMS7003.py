@@ -38,21 +38,22 @@ def parseData(data, readings):
 # Desc: Turn sensor on or off
 # Args: state - true = on, false = off
 def setSensorState(state): 
+    print("sensor: ", state)
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
-    GPIO.setup(18,GPIO.OUT)
+    GPIO.setup(4,GPIO.OUT)
 
     if state:
-        GPIO.output(18,GPIO.HIGH)
+        GPIO.output(4,GPIO.HIGH)
     else:
-        GPIO.output(18,GPIO.LOW)
+        GPIO.output(4,GPIO.LOW)
 
 
 # Desc: Turns on sensor, waits 30 seconds for startup, then reads sensor data into the provided 'readings' variable
-# Args: serial - Serial connection eg. serial.Serial("/dev/ttyS0", 9600)
-def readData(serial, readings):
+# Args: serial - Serial connection eg. serial.Serial("/dev/ttyS0", 9600), readings - Object to put readings into, warmUpTime - Time to wait for sensor to wake from sleep
+def readData(serial, readings, warmUpTime):
     setSensorState(True)
-    time.sleep(30)
+    time.sleep(warmUpTime)
     serial.reset_input_buffer()
     
 #     first two bytes returned by sensor are 0x42 followed by 0x4d. Next 30 bytes are data

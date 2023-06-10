@@ -62,14 +62,17 @@ class BackgroundThread(threading.Thread, ABC):
 
 class weatherSampler(BackgroundThread):
     def updateWeatherData(self):
-        self.weatherData = readData(self.PMS7003_SER, self.kwargs['weatherData'])
-        logging.info(f'Weather data updated at {self.weatherData["timestamp"]}')
+        readData(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
 
     def startup(self) -> None:
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
-        self.updateWeatherData()
+        readData(self.PMS7003_SER, self.kwargs['weatherData'], 0)
+        logging.info(f'Initial weather data generated at {self.kwargs["weatherData"]["timestamp"]}')
+        logging.info('Sensor needs 30 seconds to initialize, initial reading may be innaccurate')
         schedule.every(10).minutes.do(self.updateWeatherData)
+        self.updateWeatherData()
         setSensorState(False)
         
     def shutdown(self) -> None:
@@ -84,14 +87,15 @@ class weatherSampler(BackgroundThread):
 
 class updateWeather(BackgroundThread):
     def updateWeatherData(self):
-        self.weatherData = readData(self.PMS7003_SER, self.kwargs['weatherData'])
-        logging.info(f'Weather data updated at {self.weatherData["timestamp"]}')
-
+        readData(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
+        
     def startup(self) -> None:
         logging.info('Sensor readings refreshing...')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         
     def shutdown(self) -> None:
+        logging.info('Weather update thread stopped')
         setSensorState(False)
 
     def handle(self) -> None:
