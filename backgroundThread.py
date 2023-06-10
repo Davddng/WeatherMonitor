@@ -5,7 +5,7 @@ import serial
 import schedule
 
 from abc import abstractmethod, ABC
-from PMS7003 import readData
+from PMS7003 import readData, setSensorState
 
 
 class BackgroundThread(threading.Thread, ABC):
@@ -56,31 +56,46 @@ class BackgroundThread(threading.Thread, ABC):
         :return: None
         """
         self.startup()
-        while not self._stopped():
-            self.handle()
-            time.sleep(1)
+        self.handle()
         self.shutdown()
 
 
 class weatherSampler(BackgroundThread):
     def updateWeatherData(self):
         self.weatherData = readData(self.PMS7003_SER, self.kwargs['weatherData'])
+        logging.info(f'Weather data updated at {self.weatherData["timestamp"]}')
 
     def startup(self) -> None:
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.updateWeatherData()
-        schedule.every(15).seconds.do(self.updateWeatherData)
-        # TODO: Implement device startup
+        schedule.every(10).minutes.do(self.updateWeatherData)
+        setSensorState(False)
         
-
     def shutdown(self) -> None:
         logging.info('Weather sampling thread stopped')
-        # TODO: Implement device shutdown
-
+        setSensorState(False)
 
     def handle(self) -> None:
-        schedule.run_pending()
+        while not self._stopped():
+            schedule.run_pending()
+            time.sleep(1)
+
+
+class updateWeather(BackgroundThread):
+    def updateWeatherData(self):
+        self.weatherData = readData(self.PMS7003_SER, self.kwargs['weatherData'])
+        logging.info(f'Weather data updated at {self.weatherData["timestamp"]}')
+
+    def startup(self) -> None:
+        logging.info('Sensor readings refreshing...')
+        self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
+        
+    def shutdown(self) -> None:
+        setSensorState(False)
+
+    def handle(self) -> None:
+        self.updateWeatherData()
 
 
 class BackgroundThreadFactory:
@@ -88,6 +103,9 @@ class BackgroundThreadFactory:
     def create(thread_type: str, **kwargs) -> BackgroundThread:
         if thread_type == 'weatherSampling':
             return weatherSampler(**kwargs)
+        
+        if thread_type == 'updateWeather':
+            return updateWeather(**kwargs)
 
         # if thread_type == 'some_other_type':
         #     return SomeOtherThread()

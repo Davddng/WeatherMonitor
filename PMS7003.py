@@ -1,9 +1,15 @@
 import serial
 import RPi.GPIO as GPIO
+from datetime import datetime
+import time
 
 # Desc: Updates sensor data on readings variable
 # Args: data - Data read from sensor
 def parseData(data, readings):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+
+    readings["timestamp"] = dt_string
     readings["pm1"] = data[2] << 8 | data[3]
     readings["pm25"] = data[4] << 8 | data[5]
     readings["pm10"] = data[6] << 8 | data[7]
@@ -19,7 +25,7 @@ def parseData(data, readings):
     readings["reserved"] = data[26] << 8 | data[27]
     readings["checksum"] = data[28] << 8 | data[29]
     readings["error"] = 0
-    
+
     # Checksum calculation
     checksum = 0x42 + 0x4d
     for i in range(0, 27):
@@ -42,10 +48,11 @@ def setSensorState(state):
         GPIO.output(18,GPIO.LOW)
 
 
-# Desc: Reads sensor data into the provided 'readings' variable
+# Desc: Turns on sensor, waits 30 seconds for startup, then reads sensor data into the provided 'readings' variable
 # Args: serial - Serial connection eg. serial.Serial("/dev/ttyS0", 9600)
 def readData(serial, readings):
-    
+    setSensorState(True)
+    time.sleep(30)
     serial.reset_input_buffer()
     
 #     first two bytes returned by sensor are 0x42 followed by 0x4d. Next 30 bytes are data
@@ -63,6 +70,7 @@ def readData(serial, readings):
 
     sensorData = serial.read(30)
     parseData(sensorData, readings)
+    setSensorState(False)
 
 
 if __name__ == '__main__':
