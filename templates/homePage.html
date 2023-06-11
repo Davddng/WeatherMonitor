@@ -12,13 +12,18 @@
     <title>Weather Data</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="jumbotron-narrow.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jumbotron-narrow.css') }}" rel="stylesheet">
 
     <!-- Weather REST API script -->
-    <script src="js/weatherRestApi.js"></script> 
+    <script src="{{ url_for('static', filename='js/weatherRestApi.js') }}"></script> 
+
+    <!-- Debugging Refs -->
+    <!-- <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/jumbotron-narrow.css" rel="stylesheet">
+    <script src="static/js/weatherRestApi.js"></script>  -->
 
   </head>
 
