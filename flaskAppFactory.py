@@ -38,6 +38,11 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     startThread(app, 'weatherSampling')
+
+    @app.get('/')
+    @cross_origin()
+    def homePage():
+        return render_template("homePage.html")
     
     @app.get('/air_quality')
     @cross_origin()
