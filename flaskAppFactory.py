@@ -3,6 +3,7 @@ import signal
 import logging
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 from backgroundThread import BackgroundThreadFactory
 from PMS7003 import readData
 
@@ -35,14 +36,17 @@ def startThread(app, name):
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     startThread(app, 'weatherSampling')
     
     @app.get('/air_quality')
+    @cross_origin()
     def getAirQuality():
         logging.info('Get air quality')
         return jsonify(currentData)
     
     @app.get('/update_readings')
+    @cross_origin()
     def updateReadings():
         logging.info('Updating air quality...')
         startThread(app, 'updateWeather')

@@ -71,7 +71,12 @@ class weatherSampler(BackgroundThread):
         readData(self.PMS7003_SER, self.kwargs['weatherData'], 0)
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"]["timestamp"]}')
         logging.info('Sensor needs 30 seconds to initialize, initial reading may be innaccurate')
-        schedule.every(10).minutes.do(self.updateWeatherData)
+        schedule.every().hour.at(":00").do(self.updateWeatherData)
+        schedule.every().hour.at(":10").do(self.updateWeatherData)
+        schedule.every().hour.at(":20").do(self.updateWeatherData)
+        schedule.every().hour.at(":30").do(self.updateWeatherData)
+        schedule.every().hour.at(":40").do(self.updateWeatherData)
+        schedule.every().hour.at(":50").do(self.updateWeatherData)
         self.updateWeatherData()
         setSensorState(False)
         

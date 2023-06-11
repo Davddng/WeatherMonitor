@@ -41,12 +41,12 @@ def setSensorState(state):
     print("sensor: ", state)
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
-    GPIO.setup(4,GPIO.OUT)
+    GPIO.setup(18,GPIO.OUT)
 
     if state:
-        GPIO.output(4,GPIO.HIGH)
+        GPIO.output(18,GPIO.HIGH)
     else:
-        GPIO.output(4,GPIO.LOW)
+        GPIO.output(18,GPIO.LOW)
 
 
 # Desc: Turns on sensor, waits 30 seconds for startup, then reads sensor data into the provided 'readings' variable
