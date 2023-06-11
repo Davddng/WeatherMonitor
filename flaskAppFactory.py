@@ -2,7 +2,7 @@ import os
 import signal
 import logging
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS, cross_origin
 from backgroundThread import BackgroundThreadFactory
 from PMS7003 import readData
