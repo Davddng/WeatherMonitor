@@ -6,6 +6,8 @@ const getWeatherData = async () => {
     document.getElementById("pm1.0").innerHTML = weatherResponse['pm1'];
     document.getElementById("pm2.5").innerHTML = weatherResponse['pm25'];
     document.getElementById("pm10").innerHTML = weatherResponse['pm10']; 
+    document.getElementById("temp").innerHTML = weatherResponse['temp']; 
+    document.getElementById("pres").innerHTML = weatherResponse['pres']; 
     document.getElementById("HeaderText").innerHTML = "Weather Data Sampled At " + weatherResponse['timestamp'];
   }
 
