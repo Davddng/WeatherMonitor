@@ -1,15 +1,10 @@
 import serial
 import RPi.GPIO as GPIO
-from datetime import datetime
 import time
 
 # Desc: Updates sensor data on readings variable
 # Args: data - Data read from sensor
 def parseData(data, readings):
-    now = datetime.now()
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-
-    readings["timestamp"] = dt_string
     readings["pm1"] = data[2] << 8 | data[3]
     readings["pm25"] = data[4] << 8 | data[5]
     readings["pm10"] = data[6] << 8 | data[7]
@@ -51,7 +46,7 @@ def setSensorState(state):
 
 # Desc: Turns on sensor, waits 30 seconds for startup, then reads sensor data into the provided 'readings' variable
 # Args: serial - Serial connection eg. serial.Serial("/dev/ttyS0", 9600), readings - Object to put readings into, warmUpTime - Time to wait for sensor to wake from sleep
-def readData(serial, readings, warmUpTime):
+def readAirQuality(serial, readings, warmUpTime):
     setSensorState(True)
     time.sleep(warmUpTime)
     serial.reset_input_buffer()
@@ -76,6 +71,6 @@ def readData(serial, readings, warmUpTime):
 
 if __name__ == '__main__':
     readings = {}
-    readData(serial.Serial("/dev/ttyS0", 9600), readings)
+    readAirQuality(serial.Serial("/dev/ttyS0", 9600), readings)
     print(readings)
 
