@@ -129,7 +129,7 @@ class BackgroundThreadFactory:
                 return weatherSampler(**kwargs)
             elif thread_type == "updateWeather":
                 return updateWeather(**kwargs)
-            else:
-                raise NotImplementedError('Specified thread type is not implemented.')
+                
+            raise NotImplementedError('Specified thread type is not implemented.')
 
-        return switch()
+        return switch(thread_type)
