@@ -2,10 +2,13 @@ import logging
 import threading
 import time
 import serial
+import board
 import schedule
 
+from datetime import datetime
 from abc import abstractmethod, ABC
-from PMS7003 import readData, setSensorState
+from PMS7003 import readAirQuality, setSensorState
+from BMP280 import readTempPres
 
 
 class BackgroundThread(threading.Thread, ABC):
@@ -61,16 +64,27 @@ class BackgroundThread(threading.Thread, ABC):
 
 
 class weatherSampler(BackgroundThread):
+    def updateTimestamp(self):
+        now = datetime.now()
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        self.kwargs["weatherData"]["timestamp"] = dt_string
+        
     def updateWeatherData(self):
-        readData(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
+        self.updateTimestamp()
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
 
     def startup(self) -> None:
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
-        readData(self.PMS7003_SER, self.kwargs['weatherData'], 0)
+        self.BMP280_I2C = board.I2C()
+        readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 0)
+        readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
+        self.updateTimestamp()
+    
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"]["timestamp"]}')
-        logging.info('Sensor needs 30 seconds to initialize, initial reading may be innaccurate')
+        logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
         schedule.every().hour.at(":00").do(self.updateWeatherData)
         schedule.every().hour.at(":10").do(self.updateWeatherData)
         schedule.every().hour.at(":20").do(self.updateWeatherData)
@@ -92,7 +106,7 @@ class weatherSampler(BackgroundThread):
 
 class updateWeather(BackgroundThread):
     def updateWeatherData(self):
-        readData(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
         
     def startup(self) -> None:
@@ -110,13 +124,12 @@ class updateWeather(BackgroundThread):
 class BackgroundThreadFactory:
     @staticmethod
     def create(thread_type: str, **kwargs) -> BackgroundThread:
-        if thread_type == 'weatherSampling':
-            return weatherSampler(**kwargs)
-        
-        if thread_type == 'updateWeather':
-            return updateWeather(**kwargs)
+        def switch(thread_type):
+            if thread_type == "weatherSampling":
+                return weatherSampler(**kwargs)
+            elif thread_type == "updateWeather":
+                return updateWeather(**kwargs)
+                
+            raise NotImplementedError('Specified thread type is not implemented.')
 
-        # if thread_type == 'some_other_type':
-        #     return SomeOtherThread()
-
-        raise NotImplementedError('Specified thread type is not implemented.')
+        return switch(thread_type)
