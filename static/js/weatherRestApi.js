@@ -14,7 +14,7 @@ const getWeatherData = async () => {
     document.getElementById("pres").innerHTML = (pres/10).toFixed(1) + " kPa<br>" + pres.toFixed(1) + " Millibars"; 
     // relative humidity
     humid = weatherResponse['humid'];
-    document.getElementById("humid").innerHTML = pres + "%"; 
+    document.getElementById("humid").innerHTML = humid.toFixed(1) + "%"; 
     
     document.getElementById("HeaderText").innerHTML = "Weather Data Sampled At " + weatherResponse['timestamp'];
   }

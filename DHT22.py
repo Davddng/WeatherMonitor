@@ -16,8 +16,5 @@ if __name__ == '__main__':
         #Print Temperature and Humidity on Shell window
         test = {}
         readTempHumid(test)
-        print('Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(t,h))
-        print("---------")
-        print(test['humid'])
-        print(test['temp2'])
+        print('Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(test['temp2'],test['humid']))
         sleep(5) #Wait 5 seconds and read again
