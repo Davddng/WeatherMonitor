@@ -15,5 +15,6 @@ if __name__ == '__main__':
         h,t = dht.read_retry(dht.DHT22, DHT)
         #Print Temperature and Humidity on Shell window
         print('Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(t,h))
-        print(h + " " + t)
+        print(h)
+        print(t)
         sleep(5) #Wait 5 seconds and read again
