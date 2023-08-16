@@ -4,12 +4,16 @@ import time
 import serial
 import board
 import schedule
+import os
+import signal
 
 from datetime import datetime
+from flaskAppFactory import startThread
 from abc import abstractmethod, ABC
 from PMS7003 import readAirQuality, setSensorState
 from BMP280 import readTempPres
 from DHT22 import readTempHumid
+from IMX219 import takePhoto
 
 
 class BackgroundThread(threading.Thread, ABC):
@@ -63,24 +67,50 @@ class BackgroundThread(threading.Thread, ABC):
         self.handle()
         self.shutdown()
 
+# class threadFactory()
+def startThread(app, name, **kwargs):
+    weather_sampling_thread = BackgroundThreadFactory.create(name, **kwargs)
+
+    # this condition is needed to prevent creating duplicated thread in Flask debug mode
+    if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        weather_sampling_thread.start()
+
+        original_handler = signal.getsignal(signal.SIGINT)
+
+        def sigint_handler(signum, frame):
+            weather_sampling_thread.stop()
+
+            # wait until thread is finished
+            if weather_sampling_thread.is_alive():
+                weather_sampling_thread.join()
+
+            original_handler(signum, frame)
+
+        try:
+            signal.signal(signal.SIGINT, sigint_handler)
+        except ValueError as e:
+            logging.error(f'{e}. Continuing execution...')
+
+def updateTimestamp(readings):
+    startThread("takePicture")
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    readings["timestamp"] = dt_string
 
 def updateSensorReadings(self):
+    startThread
     readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
     readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
     readTempHumid(self.kwargs['weatherData'])
-    self.updateTimestamp()
+    updateTimestamp(self.kwargs['weatherData'])
 
-class weatherSampler(BackgroundThread):
-    def updateTimestamp(self):
-        now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        self.kwargs["weatherData"]["timestamp"] = dt_string
-        
+class weatherSampler(BackgroundThread):        
     def updateWeatherData(self):
         # readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
         # readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         # readTempHumid(self.kwargs['weatherData'])
         # self.updateTimestamp()
+        startThread(self.kwargs["app"], 'takePicture', **self.kwargs)
         updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
 
@@ -131,6 +161,24 @@ class updateWeather(BackgroundThread):
     def handle(self) -> None:
         self.updateWeatherData()
 
+class takeNewPhoto(BackgroundThread):
+    def startup(self) -> None:
+        logging.info('Taking photo...')
+        
+    def shutdown(self) -> None:
+        logging.info('Photo thread stopped')
+
+    def handle(self) -> None:
+        now = datetime.now()
+        year = now.strftime("%Y")
+        month = now.strftime("%m")
+        day = now.strftime("%d")
+        time = now.strftime("%H:%M")
+        path = year + '/' + month + '/' + day + '/' + time + '.jpg'
+        takePhoto(path)
+        logging.info('Photo saved to: ' + path)
+
+
 
 class BackgroundThreadFactory:
     @staticmethod
@@ -138,6 +186,8 @@ class BackgroundThreadFactory:
         def switch(thread_type):
             if thread_type == "weatherSampling":
                 return weatherSampler(**kwargs)
+            if thread_type == "takePicture":
+                return takeNewPhoto(**kwargs)
             elif thread_type == "updateWeather":
                 return updateWeather(**kwargs)
                 
