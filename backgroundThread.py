@@ -9,6 +9,7 @@ from datetime import datetime
 from abc import abstractmethod, ABC
 from PMS7003 import readAirQuality, setSensorState
 from BMP280 import readTempPres
+from DHT22 import readTempHumid
 
 
 class BackgroundThread(threading.Thread, ABC):
@@ -63,6 +64,12 @@ class BackgroundThread(threading.Thread, ABC):
         self.shutdown()
 
 
+def updateSensorReadings(self):
+    readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+    readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
+    readTempHumid(self.kwargs['weatherData'])
+    self.updateTimestamp()
+
 class weatherSampler(BackgroundThread):
     def updateTimestamp(self):
         now = datetime.now()
@@ -70,19 +77,22 @@ class weatherSampler(BackgroundThread):
         self.kwargs["weatherData"]["timestamp"] = dt_string
         
     def updateWeatherData(self):
-        readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
-        readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
-        self.updateTimestamp()
+        # readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        # readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
+        # readTempHumid(self.kwargs['weatherData'])
+        # self.updateTimestamp()
+        updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
 
     def startup(self) -> None:
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.BMP280_I2C = board.I2C()
-        readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 0)
-        readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
-        self.updateTimestamp()
-    
+        # readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 0)
+        # readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
+        # self.updateTimestamp()
+        updateSensorReadings(self)
+
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"]["timestamp"]}')
         logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
         schedule.every().hour.at(":00").do(self.updateWeatherData)
@@ -106,7 +116,8 @@ class weatherSampler(BackgroundThread):
 
 class updateWeather(BackgroundThread):
     def updateWeatherData(self):
-        readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        # readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
+        updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
         
     def startup(self) -> None:
