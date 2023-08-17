@@ -2,7 +2,8 @@ import logging
 
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS, cross_origin
-from threadFactory import startThread
+# from threadFactory import startThread
+from backgroundThread import BackgroundThreadFactory
 
 logging.basicConfig(level=logging.INFO, force=True)
 currentData = {}
@@ -34,7 +35,7 @@ currentData = {}
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    startThread(app, 'weatherSampling', weatherData=currentData, app=app)
+    BackgroundThreadFactory.startThread(app, 'weatherSampling', weatherData=currentData, app=app)
 
     @app.get('/')
     @cross_origin()
@@ -51,7 +52,7 @@ def create_app():
     @cross_origin()
     def updateReadings():
         logging.info('Updating air quality...')
-        startThread(app, 'updateWeather', weatherData=currentData, app=app)
+        BackgroundThreadFactory.startThread(app, 'updateWeather', weatherData=currentData, app=app)
         return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
     return app
