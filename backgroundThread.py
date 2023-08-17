@@ -145,9 +145,12 @@ class takeNewPhoto(BackgroundThread):
     def handle(self) -> None:
         now = datetime.now()
         name = now.strftime("%Y-%m-%d-%H%M%S.jpg")
-        path = 'static/photos/'
-        takePhoto(path, name)
-        logging.info('Photo saved to: ' + path + name)
+        pathToWebServer = 'static/'
+        pathWithinWebServer = 'photos/'
+        relativePath = pathToWebServer + pathWithinWebServer
+        takePhoto(relativePath, name)
+        self.kwargs["weatherData"]["photoPath"] = pathWithinWebServer + name
+        logging.info('Photo saved to: ' + relativePath + name)
 
 
 class BackgroundThreadFactory:
@@ -167,20 +170,20 @@ class BackgroundThreadFactory:
 
     @staticmethod
     def startThread(name, **kwargs):
-        weather_sampling_thread = BackgroundThreadFactory.create(name, **kwargs)
+        weather_station_thread = BackgroundThreadFactory.create(name, **kwargs)
 
         # this condition is needed to prevent creating duplicated thread in Flask debug mode
         if not (kwargs["app"].debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            weather_sampling_thread.start()
+            weather_station_thread.start()
 
             original_handler = signal.getsignal(signal.SIGINT)
 
             def sigint_handler(signum, frame):
-                weather_sampling_thread.stop()
+                weather_station_thread.stop()
 
                 # wait until thread is finished
-                if weather_sampling_thread.is_alive():
-                    weather_sampling_thread.join()
+                if weather_station_thread.is_alive():
+                    weather_station_thread.join()
 
                 original_handler(signum, frame)
 
