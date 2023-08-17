@@ -147,7 +147,7 @@ class takeNewPhoto(BackgroundThread):
         year = now.strftime("%Y")
         month = now.strftime("%m")
         day = now.strftime("%d")
-        time = now.strftime("%H:%M")
+        time = now.strftime("%H-%M")
         path = year + '/' + month + '/' + day + '/' + time + '.jpg'
         takePhoto(path)
         logging.info('Photo saved to: ' + path)

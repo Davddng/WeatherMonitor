@@ -1,6 +1,10 @@
-from picamera2 import Picamera2
 import time
 import os
+import logging
+
+from picamera2 import Picamera2
+from datetime import datetime
+
 
 def takePhoto(path):
     script_dir = os.path.dirname(__file__) #<-- absolute dir the script is in
@@ -14,7 +18,14 @@ def takePhoto(path):
     time.sleep(5)
     print(abs_file_path)
     camera.capture_file(abs_file_path)
-    # print("Done.")
     camera.close()
+
 if __name__ == '__main__':
-    takePhoto("test.jpg")
+    now = datetime.now()
+    year = now.strftime("%Y")
+    month = now.strftime("%m")
+    day = now.strftime("%d")
+    time = now.strftime("%H-%M")
+    path = year + '/' + month + '/' + day + '/' + time + '.jpg'
+    takePhoto(path)
+    logging.info('Photo saved to: ' + path)
