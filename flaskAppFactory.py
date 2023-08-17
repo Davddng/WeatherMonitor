@@ -2,7 +2,7 @@ import logging
 
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS, cross_origin
-from backgroundThread import BackgroundThreadFactory, startThread
+from threadFactory import startThread
 
 logging.basicConfig(level=logging.INFO, force=True)
 currentData = {}
