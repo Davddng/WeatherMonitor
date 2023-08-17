@@ -28,6 +28,6 @@ def takePhoto(path, name):
 
 if __name__ == '__main__':
     now = datetime.now()
-    path = now.strftime("%Y-%m-%d-%H%M%S.jpg")
-    takePhoto(path)
-    logging.info('Photo saved to: ' + path)
+    name = now.strftime("%Y-%m-%d-%H%M%S.jpg")
+    takePhoto('', name)
+    logging.info('Photo saved to: ' + name)
