@@ -84,7 +84,7 @@ class weatherSampler(BackgroundThread):
         # readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         # readTempHumid(self.kwargs['weatherData'])
         # self.updateTimestamp()
-        BackgroundThread.startThread('takePicture', **self.kwargs)
+        BackgroundThreadFactory.startThread('takePicture', **self.kwargs)
         updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
 
