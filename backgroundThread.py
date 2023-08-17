@@ -68,13 +68,11 @@ class BackgroundThread(threading.Thread, ABC):
         self.shutdown()
 
 def updateTimestamp(readings):
-    BackgroundThread.startThread("takePicture")
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     readings["timestamp"] = dt_string
 
 def updateSensorReadings(self):
-    BackgroundThread.startThread
     readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
     readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
     readTempHumid(self.kwargs['weatherData'])
@@ -86,7 +84,7 @@ class weatherSampler(BackgroundThread):
         # readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         # readTempHumid(self.kwargs['weatherData'])
         # self.updateTimestamp()
-        BackgroundThread.startThread(self.kwargs["app"], 'takePicture', **self.kwargs)
+        BackgroundThread.startThread('takePicture', **self.kwargs)
         updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"]["timestamp"]}')
 

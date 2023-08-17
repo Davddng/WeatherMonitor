@@ -35,7 +35,7 @@ currentData = {}
 def create_app():
     app = Flask(__name__)
     CORS(app)
-    BackgroundThreadFactory.startThread(app, 'weatherSampling', weatherData=currentData, app=app)
+    BackgroundThreadFactory.startThread('weatherSampling', weatherData=currentData, app=app)
 
     @app.get('/')
     @cross_origin()
@@ -52,7 +52,7 @@ def create_app():
     @cross_origin()
     def updateReadings():
         logging.info('Updating air quality...')
-        BackgroundThreadFactory.startThread(app, 'updateWeather', weatherData=currentData, app=app)
+        BackgroundThreadFactory.startThread('updateWeather', weatherData=currentData, app=app)
         return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
     return app
