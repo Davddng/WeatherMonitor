@@ -16,6 +16,12 @@ const getWeatherData = async () => {
     humid = weatherResponse['humid'];
     document.getElementById("humid").innerHTML = humid.toFixed(1) + "%"; 
     
+    // image path
+    imgPath = weatherResponse['photoPath'];
+    img = document.getElementById("headerImage");
+    img.src = "static/" + imgPath;
+
+    
     document.getElementById("HeaderText").innerHTML = "Weather Data Sampled At " + weatherResponse['timestamp'];
   }
 
