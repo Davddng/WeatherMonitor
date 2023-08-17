@@ -22,10 +22,6 @@ def takePhoto(path):
 
 if __name__ == '__main__':
     now = datetime.now()
-    year = now.strftime("%Y")
-    month = now.strftime("%m")
-    day = now.strftime("%d")
-    timestamp = now.strftime("%H-%M")
-    path = year + '/' + month + '/' + day + '/' + timestamp + '.jpg'
+    path = now.strftime("%Y%m%d-%H%M%S")
     takePhoto(path)
     logging.info('Photo saved to: ' + path)
