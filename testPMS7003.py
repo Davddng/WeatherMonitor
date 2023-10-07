@@ -307,14 +307,9 @@ class Plantower(object):
 
 pms1 = Plantower(name='P11', port="/dev/ttyS0", debug=True, mode='active', is_data_logged=True, logFile='PMS7003_P11.csv')
 
+'''30 second sleeping (fan off) between each cycle'''
 while True:
-    # if pms3.sampling(30):
-    # # '''read data for every 30 seconds'''
-    #     pms3.start()
-    #     pms3.lastSample = time.time()
-    if pms1.sampling(30):
-        '''30 second sleeping (fan off) between each cycle'''
-        pms1.start()
-        pms1.lastTurnOn = time.time()
-    else:
-        time.sleep(1)
+	pms1.start()
+	pms1.lastTurnOn = time.time()
+
+	time.sleep(10)
