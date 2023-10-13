@@ -1,4 +1,5 @@
 from flaskAppFactory import create_app
+import asyncio
 
 async def main():
 
@@ -7,4 +8,4 @@ async def main():
     app.run(host='0.0.0.0')
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
