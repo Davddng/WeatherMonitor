@@ -58,7 +58,7 @@ class BackgroundThread(threading.Thread, ABC):
         """
         raise NotImplementedError()
 
-    async def run(self) -> None:
+    async def runCoroutines(self) -> None:
         """
         This method will be executed in a separate thread
         when start() method is called.
@@ -67,6 +67,11 @@ class BackgroundThread(threading.Thread, ABC):
         await self.startup()
         await self.handle()
         await self.shutdown()
+        
+    def run(self) -> None:
+        asyncio.run(self.runCoroutines())
+        
+
 
 class BLEReaderThread(BackgroundThread):
     BLEReader = None
