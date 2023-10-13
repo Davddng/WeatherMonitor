@@ -2,7 +2,7 @@ import serial
 import RPi.GPIO as GPIO
 import time
 
-from flaskAppFactory import weatherDataContainer
+from weatherData import weatherDataContainer
 
 # Desc: Updates sensor data on readings variable
 # Args: data - Data read from sensor
