@@ -1,8 +1,8 @@
 from flaskAppFactory import create_app
 
-def main():
+async def main():
 
-    app = create_app()
+    app = await create_app()
     
     app.run(host='0.0.0.0')
 

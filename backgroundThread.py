@@ -31,7 +31,7 @@ class BackgroundThread(threading.Thread, ABC):
         return self._stop_event.is_set()
 
     @abstractmethod
-    def startup(self) -> None:
+    async def startup(self) -> None:
         """
         Method that is called before the thread starts.
         Initialize all necessary resources here.
@@ -40,7 +40,7 @@ class BackgroundThread(threading.Thread, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def shutdown(self) -> None:
+    async def shutdown(self) -> None:
         """
         Method that is called shortly after stop() method was called.
         Use it to clean up all resources before thread stops.
@@ -49,7 +49,7 @@ class BackgroundThread(threading.Thread, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def handle(self) -> None:
+    async def handle(self) -> None:
         """
         Method that should contain business logic of the thread.
         Will be executed in the loop until stop() method is called.
@@ -58,15 +58,15 @@ class BackgroundThread(threading.Thread, ABC):
         """
         raise NotImplementedError()
 
-    def run(self) -> None:
+    async def run(self) -> None:
         """
         This method will be executed in a separate thread
         when start() method is called.
         :return: None
         """
-        self.startup()
-        self.handle()
-        self.shutdown()
+        await self.startup()
+        await self.handle()
+        await self.shutdown()
 
 class BLEReaderThread(BackgroundThread):
     BLEReader = None
@@ -172,15 +172,15 @@ class updateWeather(BackgroundThread):
 class BackgroundThreadFactory:
     taskQueue = asyncio.Queue()
     @staticmethod
-    def create(thread_type: str, **kwargs) -> BackgroundThread:
+    async def create(thread_type: str, **kwargs) -> BackgroundThread:
         kwargs["taskQueue"] = BackgroundThreadFactory.taskQueue
-        def switch(thread_type):
+        async def switch(thread_type):
             if thread_type == "weatherSampling":
-                return weatherSampler(**kwargs)
+                return await weatherSampler(**kwargs)
             elif thread_type == "updateWeather":
-                return updateWeather(**kwargs)
+                return await updateWeather(**kwargs)
             elif thread_type == "bluetoothService":
-                return BLEReaderThread(**kwargs)
+                return await BLEReaderThread(**kwargs)
                 
             raise NotImplementedError('Specified thread type is not implemented.')
 

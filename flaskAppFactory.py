@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO, force=True)
 use_bluetooth = True
 # currentData = {}
 
-def startThread(app, name):
-    newThread = BackgroundThreadFactory.create(name, weatherData=weatherDataContainer, bt=use_bluetooth)
+async def startThread(app, name):
+    newThread = await BackgroundThreadFactory.create(name, weatherData=weatherDataContainer, bt=use_bluetooth)
 
     # this condition is needed to prevent creating duplicated thread in Flask debug mode
     if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
@@ -40,13 +40,13 @@ def startThread(app, name):
             logging.error(f'{e}. Continuing execution...')
 
 
-def create_app():
+async def create_app():
     app = Flask(__name__)
     currentData = weatherDataContainer
     CORS(app)
-    startThread(app, 'weatherSampling')
+    await startThread(app, 'weatherSampling')
     if use_bluetooth:
-        startThread(app, 'bluetoothService')
+        await startThread(app, 'bluetoothService')
 
     @app.get('/')
     @cross_origin()
@@ -61,9 +61,9 @@ def create_app():
     
     @app.get('/update_readings')
     @cross_origin()
-    def updateReadings():
+    async def updateReadings():
         logging.info('Updating air quality...')
-        startThread(app, 'updateWeather')
+        await startThread(app, 'updateWeather')
         return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
     return app
