@@ -3,11 +3,11 @@ import signal
 import logging
 import asyncio
 
-from threading import Lock
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS, cross_origin
 from backgroundThread import BackgroundThreadFactory
 from BluetoothReader import BLEReader
+from weatherData import weatherDataContainer
 
 logging.basicConfig(level=logging.INFO, force=True)
 
@@ -15,15 +15,6 @@ logging.basicConfig(level=logging.INFO, force=True)
 # False if using sensors attached to onboard GPIO
 use_bluetooth = True
 # currentData = {}
-
-class weatherDataContainer():
-    data = {}
-    busy = Lock()
-
-    def update(self, key, value):
-        weatherDataContainer.busy.acquire()
-        weatherDataContainer.data[key] = value
-        weatherDataContainer.busy.release()
 
 def startThread(app, name):
     newThread = BackgroundThreadFactory.create(name, weatherData=weatherDataContainer(), bt=use_bluetooth)
