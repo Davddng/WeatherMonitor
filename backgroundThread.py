@@ -75,7 +75,7 @@ class BLEReaderThread(BackgroundThread):
         BLEReaderThread.BLEReader = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
 
     def updateFn(self, label, val):
-        print(label, "was updated to:", val)
+        logging.info(label, "was updated to:", val)
         if label == "Temperature":
             self.kwargs["weatherData"].update("temp", val)
         elif label == "Humidity":
@@ -104,7 +104,7 @@ async def updateSensorReadings(self):
     self.updateTimestamp()
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
-            print("updating ", characteristic)
+            logging.info("updating ", characteristic)
             await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
     else:
@@ -121,16 +121,16 @@ class weatherSampler(BackgroundThread):
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
         self.kwargs["weatherData"].update("timestamp", dt_string)
         
-    def updateWeatherData(self):
-        updateSensorReadings(self)
+    async def updateWeatherData(self):
+        await updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
 
-    def startup(self) -> None:
+    async def startup(self) -> None:
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.BMP280_I2C = board.I2C()
-        updateSensorReadings(self)
-        self.kwargs["weatherData"].update("timestamp", "test")
+        await updateSensorReadings(self)
+        # self.kwargs["weatherData"].update("timestamp", "test")
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"].data["timestamp"]}')
         logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
         schedule.every().hour.at(":00").do(self.updateWeatherData)
@@ -153,8 +153,8 @@ class weatherSampler(BackgroundThread):
 
 
 class updateWeather(BackgroundThread):
-    def updateWeatherData(self):
-        updateSensorReadings(self)
+    async def updateWeatherData(self):
+        await updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     def startup(self) -> None:
