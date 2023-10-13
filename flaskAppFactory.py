@@ -17,7 +17,7 @@ use_bluetooth = True
 # currentData = {}
 
 def startThread(app, name):
-    newThread = BackgroundThreadFactory.create(name, weatherData=weatherDataContainer(), bt=use_bluetooth)
+    newThread = BackgroundThreadFactory.create(name, weatherData=weatherDataContainer, bt=use_bluetooth)
 
     # this condition is needed to prevent creating duplicated thread in Flask debug mode
     if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
@@ -42,7 +42,7 @@ def startThread(app, name):
 
 def create_app():
     app = Flask(__name__)
-    currentData = weatherDataContainer()
+    currentData = weatherDataContainer
     CORS(app)
     startThread(app, 'weatherSampling')
     if use_bluetooth:
