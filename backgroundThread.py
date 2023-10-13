@@ -74,10 +74,10 @@ class BackgroundThread(threading.Thread, ABC):
 
 
 class BLEReaderThread(BackgroundThread):
-    BLEReader = None
+    bluetooth = None
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        BLEReaderThread.BLEReader = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
+        BLEReaderThread.bluetooth = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
 
     def updateFn(self, label, val):
         logging.info(f'{label} was updated to: {val}')
@@ -95,10 +95,10 @@ class BLEReaderThread(BackgroundThread):
             self.kwargs["weatherData"].update("pm10", val)
 
     async def startup(self) -> None:
-        await BLEReaderThread.BLEReader.connect(name=bluetoothDeviceName)
+        await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
 
     async def handle(self) -> None:
-        BLEReaderThread.BLEReader.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn)
+        BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn)
     
     def shutdown(self) -> None:
         logging.info('Bluetooth thread stopped')
