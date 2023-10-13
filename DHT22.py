@@ -1,6 +1,6 @@
 import Adafruit_DHT as dht
 from time import sleep
-from flaskAppFactory import weatherDataContainer
+from weatherData import weatherDataContainer
 #Set DATA pin
 DHT = 4
 

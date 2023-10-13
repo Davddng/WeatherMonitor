@@ -101,6 +101,7 @@ class BLEReaderThread(BackgroundThread):
 
 async def updateSensorReadings(self):
     # Get new sensor readings from bluetooth sensors or from locally attached sensors
+    self.updateTimestamp()
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
             print("updating ", characteristic)
@@ -110,7 +111,6 @@ async def updateSensorReadings(self):
         readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
         readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         readTempHumid(self.kwargs['weatherData'])
-        self.updateTimestamp()
 
 class weatherSampler(BackgroundThread):
     def __init__(self, **kwargs):
@@ -130,7 +130,7 @@ class weatherSampler(BackgroundThread):
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.BMP280_I2C = board.I2C()
         updateSensorReadings(self)
-
+        self.kwargs["weatherData"].update("timestamp", "test")
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"].data["timestamp"]}')
         logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
         schedule.every().hour.at(":00").do(self.updateWeatherData)
@@ -170,6 +170,7 @@ class updateWeather(BackgroundThread):
 
 
 class BackgroundThreadFactory:
+    taskQueue = asyncio.Queue()
     @staticmethod
     def create(thread_type: str, **kwargs) -> BackgroundThread:
         kwargs["taskQueue"] = BackgroundThreadFactory.taskQueue
