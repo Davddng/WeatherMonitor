@@ -31,7 +31,7 @@ class BackgroundThread(threading.Thread, ABC):
         return self._stop_event.is_set()
 
     @abstractmethod
-    async def startup(self) -> None:
+    async def startup(self):
         """
         Method that is called before the thread starts.
         Initialize all necessary resources here.
@@ -40,7 +40,7 @@ class BackgroundThread(threading.Thread, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def shutdown(self) -> None:
+    async def shutdown(self):
         """
         Method that is called shortly after stop() method was called.
         Use it to clean up all resources before thread stops.
@@ -49,7 +49,7 @@ class BackgroundThread(threading.Thread, ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def handle(self) -> None:
+    async def handle(self):
         """
         Method that should contain business logic of the thread.
         Will be executed in the loop until stop() method is called.
@@ -58,7 +58,7 @@ class BackgroundThread(threading.Thread, ABC):
         """
         raise NotImplementedError()
 
-    async def runCoroutines(self) -> None:
+    async def runCoroutines(self):
         """
         This method will be executed in a separate thread
         when start() method is called.
@@ -144,7 +144,7 @@ class weatherSampler(BackgroundThread):
         schedule.every().hour.at(":30").do(self.updateWeatherData)
         schedule.every().hour.at(":40").do(self.updateWeatherData)
         schedule.every().hour.at(":50").do(self.updateWeatherData)
-        self.updateWeatherData()
+        await self.updateWeatherData()
         setSensorState(False)
         
     def shutdown(self) -> None:
