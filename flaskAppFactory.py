@@ -1,29 +1,45 @@
 import os
 import signal
 import logging
+import asyncio
 
+from threading import Lock
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS, cross_origin
 from backgroundThread import BackgroundThreadFactory
+from BluetoothReader import BLEReader
 
 logging.basicConfig(level=logging.INFO, force=True)
-currentData = {}
+
+# True if using bluetooth sensor
+# False if using sensors attached to onboard GPIO
+use_bluetooth = True
+# currentData = {}
+
+class weatherDataContainer():
+    data = {}
+    busy = Lock()
+
+    def update(self, key, value):
+        weatherDataContainer.busy.acquire()
+        weatherDataContainer.data[key] = value
+        weatherDataContainer.busy.release()
 
 def startThread(app, name):
-    weather_sampling_thread = BackgroundThreadFactory.create(name, weatherData=currentData)
+    newThread = BackgroundThreadFactory.create(name, weatherData=weatherDataContainer(), bt=use_bluetooth)
 
     # this condition is needed to prevent creating duplicated thread in Flask debug mode
     if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        weather_sampling_thread.start()
+        newThread.start()
 
         original_handler = signal.getsignal(signal.SIGINT)
 
         def sigint_handler(signum, frame):
-            weather_sampling_thread.stop()
+            newThread.stop()
 
             # wait until thread is finished
-            if weather_sampling_thread.is_alive():
-                weather_sampling_thread.join()
+            if newThread.is_alive():
+                newThread.join()
 
             original_handler(signum, frame)
 
@@ -35,8 +51,11 @@ def startThread(app, name):
 
 def create_app():
     app = Flask(__name__)
+    currentData = weatherDataContainer()
     CORS(app)
     startThread(app, 'weatherSampling')
+    if use_bluetooth:
+        startThread(app, 'bluetoothService')
 
     @app.get('/')
     @cross_origin()
@@ -47,7 +66,7 @@ def create_app():
     @cross_origin()
     def getAirQuality():
         logging.info('Get air quality')
-        return jsonify(currentData)
+        return jsonify(currentData.data)
     
     @app.get('/update_readings')
     @cross_origin()

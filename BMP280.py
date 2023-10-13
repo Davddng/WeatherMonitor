@@ -10,9 +10,9 @@ def readTempPres(i2c, readings):
     bmp280 = adafruit_bmp280.Adafruit_BMP280_I2C(i2c, address=0x76)
     bmp280.sea_level_pressure = 1013.25
 
-    readings["temp"] = bmp280.temperature
-    readings["pres"] = bmp280.pressure
-    readings["alti"] = bmp280.altitude
+    readings.update("temp", bmp280.temperature)
+    readings.update("pres", bmp280.pressure)
+    readings.update("alti", bmp280.altitude)
 
 if __name__ == '__main__':
     i2c = board.I2C()  # uses board.SCL and board.SDA
