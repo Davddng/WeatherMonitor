@@ -80,7 +80,7 @@ class BLEReaderThread(BackgroundThread):
         BLEReaderThread.BLEReader = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
 
     def updateFn(self, label, val):
-        logging.info(label, "was updated to:", val)
+        logging.info(f'{label} was updated to: {val}')
         if label == "Temperature":
             self.kwargs["weatherData"].update("temp", val)
         elif label == "Humidity":
@@ -109,7 +109,7 @@ async def updateSensorReadings(self):
     self.updateTimestamp()
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
-            logging.info("updating ", characteristic)
+            logging.info(f'Updating {characteristic}...')
             await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
     else:
@@ -160,7 +160,7 @@ class weatherSampler(BackgroundThread):
 class updateWeather(BackgroundThread):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
     async def updateWeatherData(self):
         await updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
