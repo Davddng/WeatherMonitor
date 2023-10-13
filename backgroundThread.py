@@ -153,6 +153,9 @@ class weatherSampler(BackgroundThread):
 
 
 class updateWeather(BackgroundThread):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
     async def updateWeatherData(self):
         await updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
@@ -176,11 +179,11 @@ class BackgroundThreadFactory:
         kwargs["taskQueue"] = BackgroundThreadFactory.taskQueue
         async def switch(thread_type):
             if thread_type == "weatherSampling":
-                return await weatherSampler(**kwargs)
+                return weatherSampler(**kwargs)
             elif thread_type == "updateWeather":
-                return await updateWeather(**kwargs)
+                return updateWeather(**kwargs)
             elif thread_type == "bluetoothService":
-                return await BLEReaderThread(**kwargs)
+                return BLEReaderThread(**kwargs)
                 
             raise NotImplementedError('Specified thread type is not implemented.')
 
