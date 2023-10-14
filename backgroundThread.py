@@ -109,6 +109,7 @@ class BLEReaderThread(BackgroundThread):
 
 async def updateSensorReadings(self):
     # Get new sensor readings from bluetooth sensors or from locally attached sensors
+    logging.info("insideSensorReadings")
     self.updateTimestamp()
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
@@ -169,8 +170,11 @@ class updateWeather(BackgroundThread):
         self.loop = asyncio.get_running_loop()
 
     def updateWeatherData(self):
+        logging.info("test")
         updateWeather.updateSensorTask = asyncio.ensure_future(updateSensorReadings(self))
+        logging.info("test2")
         updateWeather.updateSensorTask2 = self.loop.create_task(updateWeather.updateSensorTask)
+        logging.info("test3")
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     def startup(self):
