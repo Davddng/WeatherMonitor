@@ -186,7 +186,7 @@ class updateWeather(BackgroundThread):
     async def handle(self):
         await updateWeather.updateSensorTask
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
-        self.updateWeatherData()
+
 
 
 class BackgroundThreadFactory:
