@@ -61,9 +61,10 @@ async def create_app():
     
     @app.get('/update_readings')
     @cross_origin()
-    async def updateReadings():
+    def updateReadings():
         logging.info('Updating air quality...')
-        await startThread(app, 'updateWeather')
+        currentLoop = asyncio.get_running_loop()
+        currentLoop.create_task(startThread(app, 'updateWeather'))
         return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
     return app
