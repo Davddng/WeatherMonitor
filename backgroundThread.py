@@ -103,8 +103,8 @@ class BLEReaderThread(BackgroundThread):
 
 
     async def handle(self):
-        await updateWeather.updateSensorTask
-
+        await BLEReaderThread.bluetoothMonitoringTask
+        
     async def shutdown(self):
         logging.info('Bluetooth thread stopped')
 
