@@ -43,6 +43,7 @@ async def startThread(app, name):
 async def create_app():
     app = Flask(__name__)
     currentData = weatherDataContainer
+    currentLoop = asyncio.get_running_loop()
     CORS(app)
     await startThread(app, 'weatherSampling')
     if use_bluetooth:
@@ -63,7 +64,6 @@ async def create_app():
     @cross_origin()
     def updateReadings():
         logging.info('Updating air quality...')
-        currentLoop = asyncio.get_running_loop()
         currentLoop.create_task(startThread(app, 'updateWeather'))
         return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
