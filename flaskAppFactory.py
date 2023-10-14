@@ -67,8 +67,9 @@ class flaskApp:
         @cross_origin()
         def updateReadings():
             logging.info('Updating air quality...')
-            flaskApp.testThread = asyncio.ensure_future(startThread(app, 'updateWeather'))
-            flaskApp.testThread2 = currentLoop.create_task(flaskApp.testThread)
+            # flaskApp.testThread = asyncio.ensure_future(startThread(app, 'updateWeather'))
+            # flaskApp.testThread2 = currentLoop.create_task(flaskApp.testThread)
+            flaskApp.testThread2 = currentLoop.create_task(startThread(app, 'updateWeather'))
             # currentLoop.create_task(startThread(app, 'updateWeather'))
             return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
