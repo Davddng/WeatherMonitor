@@ -75,6 +75,7 @@ class BackgroundThread(threading.Thread, ABC):
 
 class BLEReaderThread(BackgroundThread):
     bluetooth = None
+    bluetoothMonitoringTask = None
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         BLEReaderThread.bluetooth = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
@@ -96,12 +97,13 @@ class BLEReaderThread(BackgroundThread):
 
     async def startup(self):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
-        currentLoop = asyncio.get_running_loop()
-        currentLoop.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
+        # currentLoop = asyncio.get_running_loop()
+        # currentLoop.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
+        BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
+
 
     async def handle(self):
-        while True:
-            continue
+        await updateWeather.updateSensorTask
 
     async def shutdown(self):
         logging.info('Bluetooth thread stopped')
@@ -112,7 +114,6 @@ async def updateSensorReadings(self):
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     self.kwargs["weatherData"].update("timestamp", dt_string)
-    # self.updateTimestamp()
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
             logging.info(f'Updating {characteristic}...')
@@ -127,11 +128,6 @@ class weatherSampler(BackgroundThread):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.loop = asyncio.get_running_loop()
-
-    # def updateTimestamp(self):
-    #     now = datetime.now()
-    #     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    #     self.kwargs["weatherData"].update("timestamp", dt_string)
         
     def updateWeatherData(self):
         self.loop.create_task(updateSensorReadings(self))
