@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from bleak import BleakScanner, BleakClient
 from bleak.exc import BleakError
 import struct
@@ -35,6 +36,7 @@ class BLEReader:
                 break
             sendData = struct.pack("<h", int(0))
             try:
+                logging.info(f'Sending {task} request...')
                 await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[task], data=sendData)
             except:
                 self.ready = False
