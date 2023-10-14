@@ -162,12 +162,15 @@ class weatherSampler(BackgroundThread):
 
 
 class updateWeather(BackgroundThread):
+    updateSensorTask = None
+    updateSensorTask2 = None
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.loop = asyncio.get_running_loop()
 
     def updateWeatherData(self):
-        self.loop.create_task(updateSensorReadings(self))
+        updateWeather.updateSensorTask = asyncio.ensure_future(updateSensorReadings(self))
+        updateWeather.updateSensorTask2 = self.loop.create_task(updateWeather.updateSensorTask)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     def startup(self):
