@@ -94,13 +94,13 @@ class BLEReaderThread(BackgroundThread):
         elif label == "PM10":
             self.kwargs["weatherData"].update("pm10", val)
 
-    async def startup(self) -> None:
+    async def startup(self):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
 
-    async def handle(self) -> None:
+    async def handle(self):
         await BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn)
     
-    def shutdown(self) -> None:
+    def shutdown(self):
         logging.info('Bluetooth thread stopped')
 
 
@@ -130,7 +130,7 @@ class weatherSampler(BackgroundThread):
         await updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
 
-    async def startup(self) -> None:
+    async def startup(self):
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.BMP280_I2C = board.I2C()
@@ -147,11 +147,11 @@ class weatherSampler(BackgroundThread):
         await self.updateWeatherData()
         setSensorState(False)
         
-    def shutdown(self) -> None:
+    def shutdown(self):
         logging.info('Weather sampling thread stopped')
         setSensorState(False)
 
-    def handle(self) -> None:
+    def handle(self):
         while not self._stopped():
             schedule.run_pending()
             time.sleep(1)
@@ -165,15 +165,15 @@ class updateWeather(BackgroundThread):
         await updateSensorReadings(self)
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
-    def startup(self) -> None:
+    def startup(self):
         logging.info('Sensor readings refreshing...')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         
-    def shutdown(self) -> None:
+    def shutdown(self):
         logging.info('Weather update thread stopped')
         setSensorState(False)
 
-    def handle(self) -> None:
+    def handle(self):
         self.updateWeatherData()
 
 
