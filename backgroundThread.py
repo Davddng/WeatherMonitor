@@ -122,32 +122,32 @@ async def updateSensorReadings(self):
 class weatherSampler(BackgroundThread):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.loop = asyncio.get_running_loop()
 
     def updateTimestamp(self):
         now = datetime.now()
         dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
         self.kwargs["weatherData"].update("timestamp", dt_string)
         
-    async def updateWeatherData(self):
-        await updateSensorReadings(self)
+    def updateWeatherData(self):
+        self.loop.create_task(updateSensorReadings(self))
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
-
+    
     async def startup(self):
         logging.info('Weather sampling thread started')
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.BMP280_I2C = board.I2C()
         await updateSensorReadings(self)
-        currentLoop = asyncio.get_running_loop()
         # self.kwargs["weatherData"].update("timestamp", "test")
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"].data["timestamp"]}')
         logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
-        schedule.every().hour.at(":00").do(currentLoop.create_task(self.updateWeatherData()))
-        schedule.every().hour.at(":10").do(currentLoop.create_task(self.updateWeatherData()))
-        schedule.every().hour.at(":20").do(currentLoop.create_task(self.updateWeatherData()))
-        schedule.every().hour.at(":30").do(currentLoop.create_task(self.updateWeatherData()))
-        schedule.every().hour.at(":40").do(currentLoop.create_task(self.updateWeatherData()))
-        schedule.every().hour.at(":50").do(currentLoop.create_task(self.updateWeatherData()))
-        currentLoop.create_task(self.updateWeatherData())
+        schedule.every().hour.at(":00").do(self.updateWeatherData)
+        schedule.every().hour.at(":10").do(self.updateWeatherData)
+        schedule.every().hour.at(":20").do(self.updateWeatherData)
+        schedule.every().hour.at(":30").do(self.updateWeatherData)
+        schedule.every().hour.at(":40").do(self.updateWeatherData)
+        schedule.every().hour.at(":50").do(self.updateWeatherData)
+        self.updateWeatherData()
         setSensorState(False)
         
     def shutdown(self):
@@ -163,9 +163,10 @@ class weatherSampler(BackgroundThread):
 class updateWeather(BackgroundThread):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.loop = asyncio.get_running_loop()
 
-    async def updateWeatherData(self):
-        await updateSensorReadings(self)
+    def updateWeatherData(self):
+        self.loop.create_task(updateSensorReadings(self))
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     def startup(self):
