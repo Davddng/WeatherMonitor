@@ -96,10 +96,12 @@ class BLEReaderThread(BackgroundThread):
 
     async def startup(self):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
+        currentLoop = asyncio.get_running_loop()
+        currentLoop.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
 
     async def handle(self):
-        await BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn)
-    
+        return
+
     def shutdown(self):
         logging.info('Bluetooth thread stopped')
 
@@ -135,16 +137,17 @@ class weatherSampler(BackgroundThread):
         self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         self.BMP280_I2C = board.I2C()
         await updateSensorReadings(self)
+        currentLoop = asyncio.get_running_loop()
         # self.kwargs["weatherData"].update("timestamp", "test")
         logging.info(f'Initial weather data generated at {self.kwargs["weatherData"].data["timestamp"]}')
         logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
-        schedule.every().hour.at(":00").do(await self.updateWeatherData)
-        schedule.every().hour.at(":10").do(await self.updateWeatherData)
-        schedule.every().hour.at(":20").do(await self.updateWeatherData)
-        schedule.every().hour.at(":30").do(await self.updateWeatherData)
-        schedule.every().hour.at(":40").do(await self.updateWeatherData)
-        schedule.every().hour.at(":50").do(await self.updateWeatherData)
-        await self.updateWeatherData()
+        schedule.every().hour.at(":00").do(currentLoop.create_task(self.updateWeatherData()))
+        schedule.every().hour.at(":10").do(currentLoop.create_task(self.updateWeatherData()))
+        schedule.every().hour.at(":20").do(currentLoop.create_task(self.updateWeatherData()))
+        schedule.every().hour.at(":30").do(currentLoop.create_task(self.updateWeatherData()))
+        schedule.every().hour.at(":40").do(currentLoop.create_task(self.updateWeatherData()))
+        schedule.every().hour.at(":50").do(currentLoop.create_task(self.updateWeatherData()))
+        currentLoop.create_task(self.updateWeatherData())
         setSensorState(False)
         
     def shutdown(self):
