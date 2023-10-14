@@ -43,7 +43,7 @@ async def startThread(app, name):
 class flaskApp:
     testThread = None
     testThread2 = None
-    async def create_app(self):
+    async def create_app():
         app = Flask(__name__)
         currentData = weatherDataContainer
         currentLoop = asyncio.get_running_loop()
