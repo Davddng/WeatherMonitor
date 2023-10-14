@@ -1,9 +1,9 @@
-from flaskAppFactory import create_app
+from flaskAppFactory import flaskApp
 import asyncio
 
 async def main():
 
-    app = await create_app()
+    app = await flaskApp.create_app()
     
     app.run(host='0.0.0.0')
 
