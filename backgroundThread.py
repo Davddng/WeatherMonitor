@@ -169,23 +169,23 @@ class updateWeather(BackgroundThread):
         super().__init__(**kwargs)
         self.loop = asyncio.get_running_loop()
 
-    def updateWeatherData(self):
-        logging.info("test")
-        updateWeather.updateSensorTask = asyncio.ensure_future(updateSensorReadings(self))
-        logging.info("test2")
-        updateWeather.updateSensorTask2 = self.loop.create_task(updateWeather.updateSensorTask)
-        logging.info("test3")
-        logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
+    # def updateWeatherData(self):
+    #     logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     def startup(self):
         logging.info('Sensor readings refreshing...')
-        self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
+        if self.kwargs["bt"]:
+            updateWeather.updateSensorTask = asyncio.create_task(updateSensorReadings(self))
+        else:
+            self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         
     def shutdown(self):
         logging.info('Weather update thread stopped')
         setSensorState(False)
 
-    def handle(self):
+    async def handle(self):
+        await updateWeather.updateSensorTask
+        logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         self.updateWeatherData()
 
 

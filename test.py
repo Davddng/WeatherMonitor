@@ -1,33 +1,19 @@
 import asyncio
-async def set_after(fut, delay, value):
-    # Sleep for *delay* seconds.
-    print('inside!')
+import time
 
-    await asyncio.sleep(delay)
-    print('hello ...')
+async def cancel_me():
+    print('inside')
+    await asyncio.sleep(10)
+    print('done sleep')
 
-    # Set *value* as a result of *fut* Future.
-    fut.set_result(value)
+def createTask():
+    return asyncio.create_task(cancel_me())
 
 async def main():
-    # Get the current event loop.
-    loop = asyncio.get_running_loop()
+    # Create a "cancel_me" Task
+    loop = createTask()
 
-    # Create a new Future object.
-    fut = loop.create_future()
+    await loop
 
-    # Run "set_after()" coroutine in a parallel Task.
-    # We are using the low-level "loop.create_task()" API here because
-    # we already have a reference to the event loop at hand.
-    # Otherwise we could have just used "asyncio.create_task()".
-    print("start")
-    loop.create_task(
-        set_after(fut, 5, '... world'))
-
-    await asyncio.sleep(5)
-    print('hello ...')
-
-    # Wait until *fut* has a result (1 second) and print it.
-    print(await fut)
-
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
