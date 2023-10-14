@@ -66,7 +66,7 @@ class BackgroundThread(threading.Thread, ABC):
         """
         await self.startup()
         await self.handle()
-        self.shutdown()
+        await self.shutdown()
         
     def run(self) -> None:
         asyncio.run(self.runCoroutines())
@@ -103,7 +103,7 @@ class BLEReaderThread(BackgroundThread):
         while True:
             continue
 
-    def shutdown(self):
+    async def shutdown(self):
         logging.info('Bluetooth thread stopped')
 
 
@@ -152,11 +152,11 @@ class weatherSampler(BackgroundThread):
         self.updateWeatherData()
         setSensorState(False)
         
-    def shutdown(self):
+    async def shutdown(self):
         logging.info('Weather sampling thread stopped')
         setSensorState(False)
 
-    def handle(self):
+    async def handle(self):
         while not self._stopped():
             schedule.run_pending()
             time.sleep(1)
@@ -172,14 +172,14 @@ class updateWeather(BackgroundThread):
     # def updateWeatherData(self):
     #     logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
-    def startup(self):
+    async def startup(self):
         logging.info('Sensor readings refreshing...')
         if self.kwargs["bt"]:
             updateWeather.updateSensorTask = asyncio.create_task(updateSensorReadings(self))
         else:
             self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         
-    def shutdown(self):
+    async def shutdown(self):
         logging.info('Weather update thread stopped')
         setSensorState(False)
 
