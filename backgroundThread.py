@@ -66,7 +66,7 @@ class BackgroundThread(threading.Thread, ABC):
         """
         await self.startup()
         await self.handle()
-        await self.shutdown()
+        self.shutdown()
         
     def run(self) -> None:
         asyncio.run(self.runCoroutines())
