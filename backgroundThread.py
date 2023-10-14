@@ -100,7 +100,8 @@ class BLEReaderThread(BackgroundThread):
         currentLoop.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
 
     async def handle(self):
-        return
+        while True:
+            continue
 
     def shutdown(self):
         logging.info('Bluetooth thread stopped')
