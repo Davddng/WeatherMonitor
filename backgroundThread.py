@@ -6,7 +6,7 @@ import board
 import schedule
 import asyncio
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from abc import abstractmethod, ABC
 from PMS7003 import readAirQuality, setSensorState
 from BMP280 import readTempPres
@@ -97,10 +97,7 @@ class BLEReaderThread(BackgroundThread):
 
     async def startup(self):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
-        # currentLoop = asyncio.get_running_loop()
-        # currentLoop.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
         BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
-
 
     async def handle(self):
         await BLEReaderThread.bluetoothMonitoringTask
@@ -111,43 +108,48 @@ class BLEReaderThread(BackgroundThread):
 
 async def updateSensorReadings(self):
     # Get new sensor readings from bluetooth sensors or from locally attached sensors
-    now = datetime.now()
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    self.kwargs["weatherData"].update("timestamp", dt_string)
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
-            logging.info(f'Updating {characteristic}...')
+            logging.info(f'Request {characteristic} update...')
             await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
     else:
         readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
         readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         readTempHumid(self.kwargs['weatherData'])
-
-class weatherSampler(BackgroundThread):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.loop = asyncio.get_running_loop()
-        
-    def updateWeatherData(self):
-        self.loop.create_task(updateSensorReadings(self))
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
     
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    self.kwargs["weatherData"].update("timestamp", dt_string)
+
+
+class weatherSampler(BackgroundThread):
+    weatherSamplerTask = None
+    nextSamplingDateTime = None
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    # Rounds to the "ceiling" of the given time delta
+    def ceil_dt(self, dt, delta):
+        return dt + (datetime.min - dt) % delta
+
     async def startup(self):
         logging.info('Weather sampling thread started')
-        self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
-        self.BMP280_I2C = board.I2C()
-        await updateSensorReadings(self)
-        # self.kwargs["weatherData"].update("timestamp", "test")
-        logging.info(f'Initial weather data generated at {self.kwargs["weatherData"].data["timestamp"]}')
-        logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
-        schedule.every().hour.at(":00").do(self.updateWeatherData)
-        schedule.every().hour.at(":10").do(self.updateWeatherData)
-        schedule.every().hour.at(":20").do(self.updateWeatherData)
-        schedule.every().hour.at(":30").do(self.updateWeatherData)
-        schedule.every().hour.at(":40").do(self.updateWeatherData)
-        schedule.every().hour.at(":50").do(self.updateWeatherData)
-        self.updateWeatherData()
+        weatherSampler.nextSamplingDateTime = datetime.now()
+        if not self.kwargs["bt"]:
+            self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
+            self.BMP280_I2C = board.I2C()
+        # await updateSensorReadings(self)
+        # logging.info(f'Initial weather data generated at {self.kwargs["weatherData"].data["timestamp"]}')
+        # logging.info('Pollutant sensor needs 30 seconds to initialize, initial reading may be innaccurate')
+        # schedule.every().hour.at(":00").do(self.updateWeatherData)
+        # schedule.every().hour.at(":10").do(self.updateWeatherData)
+        # schedule.every().hour.at(":20").do(self.updateWeatherData)
+        # schedule.every().hour.at(":30").do(self.updateWeatherData)
+        # schedule.every().hour.at(":40").do(self.updateWeatherData)
+        # schedule.every().hour.at(":50").do(self.updateWeatherData)
+        # self.updateWeatherData()
         setSensorState(False)
         
     async def shutdown(self):
@@ -155,21 +157,21 @@ class weatherSampler(BackgroundThread):
         setSensorState(False)
 
     async def handle(self):
-        while not self._stopped():
-            schedule.run_pending()
-            time.sleep(1)
+        now = datetime.now()
+        if now > weatherSampler.nextSamplingDateTime:
+            await updateSensorReadings(self)
+            weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
+            logging.info(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
+        else:
+            await asyncio.sleep(1)
+            
 
 
 class updateWeather(BackgroundThread):
     updateSensorTask = None
-    updateSensorTask2 = None
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.loop = asyncio.get_running_loop()
 
-    # def updateWeatherData(self):
-    #     logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
-        
     async def startup(self):
         logging.info('Sensor readings refreshing...')
         if self.kwargs["bt"]:
