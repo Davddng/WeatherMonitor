@@ -98,7 +98,7 @@ class BLEReaderThread(BackgroundThread):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
 
     async def handle(self) -> None:
-        BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn)
+        await BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn)
     
     def shutdown(self) -> None:
         logging.info('Bluetooth thread stopped')

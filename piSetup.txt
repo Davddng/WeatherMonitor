@@ -1,0 +1,19 @@
+Things I did to get bluetooth working on raspberry pi
+
+sudo apt-get install pi-bluetooth 
+
+sudo modprobe btusb  # add the btusb module to the kernel
+sudo systemctl start bluetooth.service
+
+systemctl start hciuart
+
+
+Other setup 
+(may need to remove external management with sudo rm -rf /usr/lib/python3.11/EXTERNALLY-MANAGED)
+pip3 install bleak 
+pip3 install flask
+pip3 install flask_cors
+pip3 install adafruit-blinka
+pip3 install schedule
+pip3 install adafruit-circuitpython-bmp280
+pip install Adafruit-DHT
