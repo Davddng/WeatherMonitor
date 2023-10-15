@@ -33,10 +33,11 @@ class BLEReader:
         while True:
             logging.info(f'await task...')
             try:
-                task = await self.tasks.get_nowait()
+                task = self.tasks.get_nowait()
             except asyncio.QueueEmpty:
                 logging.info("Queue empty, continuing...")
                 asyncio.sleep(1)
+                continue
             logging.info(f'task get!')
             if task == -1:
                 break
