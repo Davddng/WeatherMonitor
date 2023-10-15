@@ -41,7 +41,7 @@ To view all open screens:
 screen –ls
 
 To detach current session:
-Ctrl+A  –d
+Ctrl+A, d
 
 To reattach session:
 screen –r [screen_ID/screen_name]
