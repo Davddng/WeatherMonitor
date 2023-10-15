@@ -210,7 +210,7 @@ class takeNewPhoto(BackgroundThread):
         pathWithinWebServer = 'photos/'
         relativePath = pathToWebServer + pathWithinWebServer
         takePhoto(relativePath, name)
-        self.kwargs["weatherData"]["photoPath"] = pathWithinWebServer + name
+        self.kwargs["weatherData"].update("photoPath", pathWithinWebServer + name)
         logging.info('Photo saved to: ' + relativePath + name)
 
 

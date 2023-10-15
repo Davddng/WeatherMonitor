@@ -9,6 +9,7 @@ systemctl start hciuart
 
 
 Other setup 
+Enable I2C, SPI, Serial, and 1-Wire interfaces using raspi-config
 (may need to remove external management with sudo rm -rf /usr/lib/python3.11/EXTERNALLY-MANAGED)
 pip3 install bleak 
 pip3 install flask
@@ -17,3 +18,7 @@ pip3 install adafruit-blinka
 pip3 install schedule
 pip3 install adafruit-circuitpython-bmp280
 pip install Adafruit-DHT
+
+Modifying /boot/config.txt for camera support
+add "start_x=1" to enable camera support in the firmware (not libcamera)
+libcamera support requires camera_auto_detect=1 in config.txt (on current/Bullseye firmware), and dtoverlay=imx219, dtoverlay=imx477 etc.
