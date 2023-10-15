@@ -2,32 +2,34 @@ import serial
 import RPi.GPIO as GPIO
 import time
 
+from weatherData import weatherDataContainer
+
 # Desc: Updates sensor data on readings variable
 # Args: data - Data read from sensor
 def parseData(data, readings):
-    readings["pm1"] = data[2] << 8 | data[3]
-    readings["pm25"] = data[4] << 8 | data[5]
-    readings["pm10"] = data[6] << 8 | data[7]
-    readings["pm1env"] = data[8] << 8 | data[9]
-    readings["pm25env"] = data[10] << 8 | data[11]
-    readings["pm10env"] = data[12] << 8 | data[13]
-    readings["pbd3"] = data[14] << 8 | data[15]
-    readings["pbd5"] = data[16] << 8 | data[17]
-    readings["pbd10"] = data[18] << 8 | data[19]
-    readings["pbd25"] = data[20] << 8 | data[21]
-    readings["pbd50"] = data[22] << 8 | data[23]
-    readings["pbd100"] = data[24] << 8 | data[25]
-    readings["reserved"] = data[26] << 8 | data[27]
-    readings["checksum"] = data[28] << 8 | data[29]
-    readings["error"] = 0
+    readings.update("pm1", data[2] << 8 | data[3])
+    readings.update("pm25", data[4] << 8 | data[5])
+    readings.update("pm10", data[6] << 8 | data[7])
+    readings.update("pm1env", data[8] << 8 | data[9])
+    readings.update("pm25env", data[10] << 8 | data[11])
+    readings.update("pm10env", data[12] << 8 | data[13])
+    readings.update("pbd3", data[14] << 8 | data[15])
+    readings.update("pbd5", data[16] << 8 | data[17])
+    readings.update("pbd10", data[18] << 8 | data[19])
+    readings.update("pbd25", data[20] << 8 | data[21])
+    readings.update("pbd50", data[22] << 8 | data[23])
+    readings.update("pbd100", data[24] << 8 | data[25])
+    readings.update("reserved", data[26] << 8 | data[27])
+    readings.update("checksum", data[28] << 8 | data[29])
+    readings.update("error", 0)
 
     # Checksum calculation
     checksum = 0x42 + 0x4d
     for i in range(0, 27):
         checksum += data[i]
     
-    if checksum != readings['checksum']:
-        readings['error'] = 1
+    if checksum != readings.data['checksum']:
+        readings.update('error', 1)
     
 
 # Desc: Turn sensor on or off
@@ -44,7 +46,7 @@ def setSensorState(state):
         GPIO.output(18,GPIO.LOW)
 
 
-# Desc: Turns on sensor, waits 30 seconds for startup, then reads sensor data into the provided 'readings' variable
+# Desc: Turns on sensor, waits 30 seconds for startup, then reads sensor data into the provided 'readings' object
 # Args: serial - Serial connection eg. serial.Serial("/dev/ttyS0", 9600), readings - Object to put readings into, warmUpTime - Time to wait for sensor to wake from sleep
 def readAirQuality(serial, readings, warmUpTime):
     setSensorState(True)
@@ -70,7 +72,7 @@ def readAirQuality(serial, readings, warmUpTime):
 
 
 if __name__ == '__main__':
-    readings = {}
+    readings = weatherDataContainer()
     readAirQuality(serial.Serial("/dev/ttyS0", 9600), readings)
     print(readings)
 
