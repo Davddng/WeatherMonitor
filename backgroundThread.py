@@ -162,6 +162,8 @@ class weatherSampler(BackgroundThread):
             await updateSensorReadings(self)
             weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
             logging.info(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
+        await asyncio.sleep(1)
+        logging.info("handle Sampling")
 
 
 class updateWeather(BackgroundThread):
