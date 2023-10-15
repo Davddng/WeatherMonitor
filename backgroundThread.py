@@ -231,7 +231,7 @@ class BackgroundThreadFactory:
                 
             raise NotImplementedError('Specified thread type is not implemented.')
 
-        return switch(thread_type)
+        return await switch(thread_type)
 
     async def startThread(app, name, **kwargs):
         newThread = await BackgroundThreadFactory.create(name, **kwargs)
