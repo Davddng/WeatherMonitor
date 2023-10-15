@@ -4,6 +4,8 @@ import time
 import serial
 import board
 import schedule
+import os
+import signal
 import asyncio
 
 from datetime import datetime, timedelta
@@ -11,6 +13,7 @@ from abc import abstractmethod, ABC
 from PMS7003 import readAirQuality, setSensorState
 from BMP280 import readTempPres
 from DHT22 import readTempHumid
+from IMX219 import takePhoto
 from BluetoothReader import BLEReader
 
 # Name or address of bluetooth sensor to connect 
@@ -72,6 +75,10 @@ class BackgroundThread(threading.Thread, ABC):
         asyncio.run(self.runCoroutines())
         
 
+def updateTimestamp(readings):
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    readings["timestamp"] = dt_string
 
 class BLEReaderThread(BackgroundThread):
     bluetooth = None
@@ -120,7 +127,8 @@ async def updateSensorReadings(self):
         readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         readTempHumid(self.kwargs['weatherData'])
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
-    
+        
+    await BackgroundThreadFactory.startThread(name='takePicture', **self.kwargs)
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     self.kwargs["weatherData"].update("timestamp", dt_string)
@@ -188,6 +196,23 @@ class updateWeather(BackgroundThread):
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
 
 
+class takeNewPhoto(BackgroundThread):
+    async def startup(self) -> None:
+        logging.info('Taking photo...')
+        
+    async def shutdown(self) -> None:
+        logging.info('Photo thread stopped')
+
+    async def handle(self) -> None:
+        now = datetime.now()
+        name = now.strftime("%Y-%m-%d-%H%M%S.jpg")
+        pathToWebServer = 'static/'
+        pathWithinWebServer = 'photos/'
+        relativePath = pathToWebServer + pathWithinWebServer
+        takePhoto(relativePath, name)
+        self.kwargs["weatherData"].update("photoPath", pathWithinWebServer + name)
+        logging.info('Photo saved to: ' + relativePath + name)
+
 
 class BackgroundThreadFactory:
     taskQueue = asyncio.Queue()
@@ -197,6 +222,8 @@ class BackgroundThreadFactory:
         async def switch(thread_type):
             if thread_type == "weatherSampling":
                 return weatherSampler(**kwargs)
+            if thread_type == "takePicture":
+                return takeNewPhoto(**kwargs)
             elif thread_type == "updateWeather":
                 return updateWeather(**kwargs)
             elif thread_type == "bluetoothService":
@@ -205,3 +232,27 @@ class BackgroundThreadFactory:
             raise NotImplementedError('Specified thread type is not implemented.')
 
         return await switch(thread_type)
+
+    async def startThread(app, name, **kwargs):
+        kwargs["app"] = app
+        newThread = await BackgroundThreadFactory.create(name, **kwargs)
+
+        # this condition is needed to prevent creating duplicated thread in Flask debug mode
+        if not (app.debug or os.environ.get('FLASK_ENV') == 'development') or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+            newThread.start()
+
+            original_handler = signal.getsignal(signal.SIGINT)
+
+            def sigint_handler(signum, frame):
+                newThread.stop()
+
+                # wait until thread is finished
+                if newThread.is_alive():
+                    newThread.join()
+
+                original_handler(signum, frame)
+
+            try:
+                signal.signal(signal.SIGINT, sigint_handler)
+            except ValueError as e:
+                logging.error(f'{e}. Continuing execution...')

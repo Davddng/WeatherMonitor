@@ -1,19 +1,9 @@
 import asyncio
 import time
 
-async def cancel_me():
-    print('inside')
-    await asyncio.sleep(10)
-    print('done sleep')
-
-def createTask():
-    return asyncio.create_task(cancel_me())
-
-async def main():
-    # Create a "cancel_me" Task
-    loop = createTask()
-
-    await loop
+async def main(name="default", **kwargs):
+    print(name)
+    print(kwargs)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(name="testName", var1="testVar1", var2="testVar2"))

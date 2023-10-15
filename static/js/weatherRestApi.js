@@ -8,13 +8,23 @@ const getWeatherData = async () => {
     document.getElementById("pm10").innerHTML = weatherResponse['pm10']; 
     // temperature in celcius
     temp = weatherResponse['temp'];
-    document.getElementById("temp").innerHTML = temp.toFixed(1) + " °C<br>" + ((temp * 9/5) + 32).toFixed(1) + " °F"; 
+    document.getElementById("temp").innerHTML = temp.toFixed(2) + " °C<br>" + ((temp * 9/5) + 32).toFixed(1) + " °F"; 
     // pressure in hPa, same as millibar
-    pres = weatherResponse['pres'] 
-    document.getElementById("pres").innerHTML = (pres/10).toFixed(1) + " kPa<br>" + pres.toFixed(1) + " Millibars"; 
+    pres = weatherResponse['pres']
+    pressureText = pres.toFixed(2) + " kPa<br>";
+    pressureText += (pres*10).toFixed(1) + " Millibars<br>";
+    pressureText += (pres*0.2953).toFixed(2) + " inHg";
+
+    document.getElementById("pres").innerHTML = pressureText; 
     // relative humidity
     humid = weatherResponse['humid'];
     document.getElementById("humid").innerHTML = humid.toFixed(1) + "%"; 
+    
+    // image path
+    imgPath = weatherResponse['photoPath'];
+    img = document.getElementById("headerImage");
+    img.src = "static/" + imgPath;
+
     
     document.getElementById("HeaderText").innerHTML = "Weather Data Sampled At " + weatherResponse['timestamp'];
   }
