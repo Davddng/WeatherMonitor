@@ -31,7 +31,9 @@ class BLEReader:
 
         await self.subscribeCharacteristics()
         while True:
+            logging.info(f'await task...')
             task = await self.tasks.get()
+            logging.info(f'task get!')
             if task == -1:
                 break
             sendData = struct.pack("<h", int(0))
@@ -41,12 +43,15 @@ class BLEReader:
             except:
                 self.ready = False
                 print("Bluetooth error, reconnecting...")
+                logging.info(f'error!!!')
                 await self.connectToDevice()
                 await self.subscribeCharacteristics()
                 self.ready = True
         
-        await self.unsubscribeCharacteristics()
-        await self._BLE_CLIENT.disconnect()
+        logging.info(f'exit loop...')
+        
+        # await self.unsubscribeCharacteristics()
+        # await self._BLE_CLIENT.disconnect()
 
 
     async def connectToDevice(self):
