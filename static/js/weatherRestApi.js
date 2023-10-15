@@ -10,8 +10,12 @@ const getWeatherData = async () => {
     temp = weatherResponse['temp'];
     document.getElementById("temp").innerHTML = temp.toFixed(2) + " °C<br>" + ((temp * 9/5) + 32).toFixed(1) + " °F"; 
     // pressure in hPa, same as millibar
-    pres = weatherResponse['pres'] 
-    document.getElementById("pres").innerHTML = pres.toFixed(1) + " kPa<br>" + (pres*10).toFixed(1) + " Millibars"; 
+    pres = weatherResponse['pres']
+    pressureText = pres.toFixed(2) + " kPa<br>";
+    pressureText += (pres*10).toFixed(1) + " Millibars<br>";
+    pressureText += (pres*0.2953).toFixed(2) + " inHg";
+
+    document.getElementById("pres").innerHTML = pressureText; 
     // relative humidity
     humid = weatherResponse['humid'];
     document.getElementById("humid").innerHTML = humid.toFixed(1) + "%"; 
