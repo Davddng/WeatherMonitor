@@ -31,14 +31,11 @@ class BLEReader:
 
         await self.subscribeCharacteristics()
         while True:
-            logging.info(f'await task...')
             try:
                 task = self.tasks.get_nowait()
             except asyncio.QueueEmpty:
-                logging.info("Queue empty, continuing...")
                 await asyncio.sleep(1)
                 continue
-            logging.info(f'task get!')
             if task == -1:
                 break
             sendData = struct.pack("<h", int(0))
@@ -52,11 +49,9 @@ class BLEReader:
                 await self.connectToDevice()
                 await self.subscribeCharacteristics()
                 self.ready = True
-        
-        logging.info(f'exit loop...')
-        
-        # await self.unsubscribeCharacteristics()
-        # await self._BLE_CLIENT.disconnect()
+                
+        await self.unsubscribeCharacteristics()
+        await self._BLE_CLIENT.disconnect()
 
 
     async def connectToDevice(self):
