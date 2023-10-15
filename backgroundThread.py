@@ -197,13 +197,13 @@ class updateWeather(BackgroundThread):
 
 
 class takeNewPhoto(BackgroundThread):
-    def startup(self) -> None:
+    async def startup(self) -> None:
         logging.info('Taking photo...')
         
-    def shutdown(self) -> None:
+    async def shutdown(self) -> None:
         logging.info('Photo thread stopped')
 
-    def handle(self) -> None:
+    async def handle(self) -> None:
         now = datetime.now()
         name = now.strftime("%Y-%m-%d-%H%M%S.jpg")
         pathToWebServer = 'static/'
