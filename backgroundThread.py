@@ -128,7 +128,7 @@ async def updateSensorReadings(self):
         readTempHumid(self.kwargs['weatherData'])
         logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
-    BackgroundThreadFactory.startThread('takePicture', **self.kwargs)
+    BackgroundThreadFactory.startThread(name='takePicture', **self.kwargs)
     now = datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     self.kwargs["weatherData"].update("timestamp", dt_string)
