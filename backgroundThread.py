@@ -234,6 +234,7 @@ class BackgroundThreadFactory:
         return await switch(thread_type)
 
     async def startThread(app, name, **kwargs):
+        kwargs["app"] = app
         newThread = await BackgroundThreadFactory.create(name, **kwargs)
 
         # this condition is needed to prevent creating duplicated thread in Flask debug mode
