@@ -8,7 +8,7 @@ const getWeatherData = async () => {
     document.getElementById("pm10").innerHTML = weatherResponse['pm10']; 
     // temperature in celcius
     temp = weatherResponse['temp'];
-    document.getElementById("temp").innerHTML = temp.toFixed(1) + " °C<br>" + ((temp * 9/5) + 32).toFixed(1) + " °F"; 
+    document.getElementById("temp").innerHTML = temp.toFixed(2) + " °C<br>" + ((temp * 9/5) + 32).toFixed(1) + " °F"; 
     // pressure in hPa, same as millibar
     pres = weatherResponse['pres'] 
     document.getElementById("pres").innerHTML = pres.toFixed(1) + " kPa<br>" + (pres*10).toFixed(1) + " Millibars"; 
