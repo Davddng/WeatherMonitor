@@ -22,3 +22,26 @@ pip install Adafruit-DHT
 Modifying /boot/config.txt for camera support
 add "start_x=1" to enable camera support in the firmware (not libcamera)
 libcamera support requires camera_auto_detect=1 in config.txt (on current/Bullseye firmware), and dtoverlay=imx219, dtoverlay=imx477 etc.
+
+Python process doesn't seem to quit using Ctrl-C, so it must be killed manually using by getting the parent pid using:
+ps -eLf | grep -i '[p]ython'
+
+Then:
+kill -1 [pid]
+
+Optional: Use a terminal multiplexer to start main.py using ssh, then detach session and log out while main.py keeps running.
+Used GNU Screen, but tmux is also good.
+
+sudo apt-get install screen
+
+To create a screen:
+screen -S [screen name]
+
+To view all open screens:
+screen –ls
+
+To detach current session:
+Ctrl+A  –d
+
+To reattach session:
+screen –r [screen_ID/screen_name]
