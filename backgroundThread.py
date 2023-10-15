@@ -112,7 +112,8 @@ async def updateSensorReadings(self):
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
             logging.info(f'Request {characteristic} update...')
-            await self.kwargs["taskQueue"].put(characteristic)
+            await BLEReaderThread.bluetooth.tasks.put(characteristic)
+            # await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
     else:
         readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
@@ -165,8 +166,6 @@ class weatherSampler(BackgroundThread):
                 weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
                 logging.info(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
             await asyncio.sleep(1)
-            logging.info("handle Sampling")
-
 
 class updateWeather(BackgroundThread):
     updateSensorTask = None
