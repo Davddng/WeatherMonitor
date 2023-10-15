@@ -42,10 +42,15 @@ class flaskApp:
     async def create_app():
         app = Flask(__name__)
         currentData = weatherDataContainer
+        kwargs = {
+            "app": app,
+            "weatherData": currentData,
+            "bt": use_bluetooth,
+        }
         CORS(app)
-        await BackgroundThreadFactory.startThread(app=app, name='weatherSampling', weatherData=currentData)
+        await BackgroundThreadFactory.startThread(**kwargs, name='weatherSampling')
         if use_bluetooth:
-            await BackgroundThreadFactory.startThread(app=app, name='bluetoothService', weatherData=currentData)
+            await BackgroundThreadFactory.startThread(**kwargs, name='bluetoothService')
 
         @app.get('/')
         @cross_origin()
@@ -61,7 +66,7 @@ class flaskApp:
         @app.route('/update_readings')
         async def updateReadings():
             logging.info('Updating air quality...')
-            await BackgroundThreadFactory.startThread(app=app, name='updateWeather', weatherData=currentData)
+            await BackgroundThreadFactory.startThread(**kwargs, name='updateWeather')
             return jsonify({"Message": "Sensor starting... Readings will update in 30 seconds"})
 
         return app
