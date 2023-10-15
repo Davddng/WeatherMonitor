@@ -100,7 +100,8 @@ class BLEReaderThread(BackgroundThread):
         BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
 
     async def handle(self):
-        await BLEReaderThread.bluetoothMonitoringTask
+        while True:
+            await BLEReaderThread.bluetoothMonitoringTask
         
     async def shutdown(self):
         logging.info('Bluetooth thread stopped')
@@ -157,13 +158,14 @@ class weatherSampler(BackgroundThread):
         setSensorState(False)
 
     async def handle(self):
-        now = datetime.now()
-        if now > weatherSampler.nextSamplingDateTime:
-            await updateSensorReadings(self)
-            weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
-            logging.info(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
-        await asyncio.sleep(1)
-        logging.info("handle Sampling")
+        while True:
+            now = datetime.now()
+            if now > weatherSampler.nextSamplingDateTime:
+                await updateSensorReadings(self)
+                weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
+                logging.info(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
+            await asyncio.sleep(1)
+            logging.info("handle Sampling")
 
 
 class updateWeather(BackgroundThread):
