@@ -32,7 +32,11 @@ class BLEReader:
         await self.subscribeCharacteristics()
         while True:
             logging.info(f'await task...')
-            task = await self.tasks.get()
+            try:
+                task = await self.tasks.get_nowait()
+            except asyncio.QueueEmpty:
+                logging.info("Queue empty, continuing...")
+                asyncio.sleep(1)
             logging.info(f'task get!')
             if task == -1:
                 break
