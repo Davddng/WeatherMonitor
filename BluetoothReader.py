@@ -158,7 +158,7 @@ class BLEReader:
 # Demo example
 async def main():
     demoReader = BLEReader(debug=True)
-    characteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Heat"]
+    characteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Boolean"]
     def updateFn(label, val):
         print(label, "was updated to:", val)
 

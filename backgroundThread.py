@@ -18,7 +18,7 @@ from BluetoothReader import BLEReader
 
 # Name or address of bluetooth sensor to connect 
 bluetoothDeviceName = "28:CD:C1:0D:5C:C0"
-monitorCharacteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Heat"]
+monitorCharacteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Boolean"]
 pollCharacteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration"]
 
 class BackgroundThread(threading.Thread, ABC):
@@ -101,7 +101,7 @@ class BLEReaderThread(BackgroundThread):
             self.kwargs["weatherData"].update("pm25", val)
         elif label == "PM10":
             self.kwargs["weatherData"].update("pm10", val)
-        elif label == "Heat":
+        elif label == "Boolean":
             self.kwargs["weatherData"].update("heat", val)
 
     async def startup(self):
