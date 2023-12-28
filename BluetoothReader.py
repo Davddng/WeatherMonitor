@@ -59,8 +59,12 @@ class BLEReader:
         # Find and connect to a device matching the name provided
         foundDevices = await self.searchBLEDeviceName(self.deviceName)
         self._BLE_CLIENT = BleakClient(address_or_ble_device = foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
-        await self._BLE_CLIENT.connect()
-        print("Connected to: ", foundDevices[0].name)
+        while not self._BLE_CLIENT.is_connected:
+            try:
+                await self._BLE_CLIENT.connect()
+                print("Connected to: ", foundDevices[0].name)
+            except TimeoutError:
+                print("BT timeout, retrying...")
 
     # Scans nearby bluetooth BLE devices for name or address that matches input 
     async def searchBLEDeviceName(self, name):
