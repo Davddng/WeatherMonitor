@@ -36,8 +36,9 @@ class BLEReader:
             except asyncio.QueueEmpty:
                 await asyncio.sleep(1)
                 continue
-            if task == -1:
-                break
+            # if task == -1:
+            #     break
+            logging.info(f'Task Get')
             sendData = struct.pack("<h", int(0))
             try:
                 logging.info(f'Sending {task} request...')
