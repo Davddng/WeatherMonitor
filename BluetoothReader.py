@@ -71,7 +71,7 @@ class BLEReader:
         while not self._BLE_CLIENT.is_connected:
             try:
                 await self._BLE_CLIENT.connect()
-                self.debugLog("Connected to: ", foundDevices[0].name)
+                self.debugLog(f"Connected to: {foundDevices[0].name}")
             except TimeoutError:
                 self.debugLog("BT timeout, retrying...")
 
@@ -89,12 +89,12 @@ class BLEReader:
                     foundDevices.append(d)
 
             if len(foundDevices) == 0:
-                self.debugLog("No devices found matching '%s'. Searching again..." % name)
+                self.debugLog(f"No devices found matching '{name}'. Searching again...")
 
         return foundDevices
     
     def clientDisconnectHandler(self, client):
-        self.debugLog("Client disconnected: ", client)
+        self.debugLog(f"Client disconnected: {client}")
         # await self.connectToDevice()
         # await self.subscribeCharacteristics()
 
