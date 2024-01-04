@@ -37,8 +37,6 @@ use_bluetooth = True
 #             logging.error(f'{e}. Continuing execution...')
 
 class flaskApp:
-    testThread = None
-    testThread2 = None
     async def create_app():
         app = Flask(__name__)
         currentData = weatherDataContainer

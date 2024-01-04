@@ -85,7 +85,8 @@ class BLEReaderThread(BackgroundThread):
     bluetoothMonitoringTask = None
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        BLEReaderThread.bluetooth = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
+        # BLEReaderThread.bluetooth = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
+        BLEReaderThread.bluetooth = BLEReader(debug=True)
 
     def updateFn(self, label, val):
         logging.info(f'{label} was updated to: {val}')
@@ -221,10 +222,10 @@ class takeNewPhoto(BackgroundThread):
 
 
 class BackgroundThreadFactory:
-    taskQueue = asyncio.Queue()
+    # taskQueue = asyncio.Queue()
     @staticmethod
     async def create(thread_type: str, **kwargs) -> BackgroundThread:
-        kwargs["taskQueue"] = BackgroundThreadFactory.taskQueue
+        # kwargs["taskQueue"] = BackgroundThreadFactory.taskQueue
         async def switch(thread_type):
             if thread_type == "weatherSampling":
                 return weatherSampler(**kwargs)

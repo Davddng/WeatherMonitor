@@ -20,6 +20,10 @@ class BLEReader:
         await self.connectToDevice()
         self.ready = True
 
+    def debugLog(self, str):
+        if self.debug:
+            logging.info(str)
+
     # Desc: Starts monitoring provided characteristics for changes
     # characteristics = Bluetooth characteristics to monitor
     # onUpdate(characteristic, data) = callback function to be called each time a characteristic updates
@@ -30,27 +34,32 @@ class BLEReader:
         self.onUpdate = onUpdate
 
         await self.subscribeCharacteristics()
+        sleepCounter = 0
         while True:
             try:
                 task = self.tasks.get_nowait()
             except asyncio.QueueEmpty:
                 await asyncio.sleep(1)
+                sleepCounter += 1
+                if sleepCounter >= 30:
+                    self.debugLog('Queue empty')
                 continue
             # if task == -1:
             #     break
-            logging.info(f'Task Get')
+            self.debugLog(f'Task Get')
             sendData = struct.pack("<h", int(0))
             try:
-                logging.info(f'Sending {task} request...')
+                self.debugLog(f'Sending {task} request...')
                 await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[task], data=sendData)
             except:
                 self.ready = False
-                print("Bluetooth error, reconnecting...")
-                logging.info(f'error!!!')
+                self.debugLog("Bluetooth error, reconnecting...")
+                self.debugLog(f'error!!!')
                 await self.connectToDevice()
                 await self.subscribeCharacteristics()
                 self.ready = True
-                
+        
+        self.debugLog("Error: bluetooth monitoring end reached...")
         await self.unsubscribeCharacteristics()
         await self._BLE_CLIENT.disconnect()
 
@@ -62,9 +71,9 @@ class BLEReader:
         while not self._BLE_CLIENT.is_connected:
             try:
                 await self._BLE_CLIENT.connect()
-                print("Connected to: ", foundDevices[0].name)
+                self.debugLog("Connected to: ", foundDevices[0].name)
             except TimeoutError:
-                print("BT timeout, retrying...")
+                self.debugLog("BT timeout, retrying...")
 
     # Scans nearby bluetooth BLE devices for name or address that matches input 
     async def searchBLEDeviceName(self, name):
@@ -80,24 +89,26 @@ class BLEReader:
                     foundDevices.append(d)
 
             if len(foundDevices) == 0:
-                print("No devices found matching '%s'. Searching again..." % name)
+                self.debugLog("No devices found matching '%s'. Searching again..." % name)
 
         return foundDevices
     
     def clientDisconnectHandler(self, client):
-        print("Client disconnected: ", client)
+        self.debugLog("Client disconnected: ", client)
+        # await self.connectToDevice()
+        # await self.subscribeCharacteristics()
 
     async def subscribeCharacteristics(self):
-        print("Descriptors: ")
+        self.debugLog("Descriptors: ")
         if len(self._BLE_CLIENT.services.descriptors) == 0:
-            print("None")
+            self.debugLog("None")
         for descriptorNumber in self._BLE_CLIENT.services.descriptors:
             descriptor = self._BLE_CLIENT.services.get_descriptor(descriptorNumber)
             await self.printDescriptorDetails(descriptor)
         
-        print("Services: ")
+        self.debugLog("Services: ")
         if len(self._BLE_CLIENT.services.services) == 0:
-            print("None")
+            self.debugLog("None")
         for serviceNumber in self._BLE_CLIENT.services.services:
             service = self._BLE_CLIENT.services.get_service(serviceNumber)
             await self.printServiceDetails(service)
@@ -129,29 +140,29 @@ class BLEReader:
 
     # Helper functions to print Bluetooth attributes for debugging
     async def printDescriptorDetails(self, descriptor):
-        print("Descriptor: ", descriptor.description)
-        print("Descriptor value: ", await self._BLE_CLIENT.read_gatt_descriptor(descriptor.handle))
+        self.debugLog("Descriptor: ", descriptor.description)
+        self.debugLog("Descriptor value: ", await self._BLE_CLIENT.read_gatt_descriptor(descriptor.handle))
 
     async def printCharacteristicDetails(self, characteristic):
-        print("Characteristic description: ", characteristic.description)
-        print("Characteristic UUID: ", characteristic.uuid)
-        print("Characteristic descriptors: ")
+        self.debugLog("Characteristic description: ", characteristic.description)
+        self.debugLog("Characteristic UUID: ", characteristic.uuid)
+        self.debugLog("Characteristic descriptors: ")
         if len(characteristic.descriptors) == 0:
-            print("None")
+            self.debugLog("None")
         else:
             for descriptor in characteristic.descriptors:
                 await self.printDescriptorDetails(descriptor)
-            print("______End of descriptors______")
+            self.debugLog("______End of descriptors______")
 
     async def printServiceDetails(self, service):
-        print("Service description: ", service.description)
-        print("List of characteristics in this service:")
+        self.debugLog("Service description: ", service.description)
+        self.debugLog("List of characteristics in this service:")
         if len(service.characteristics) == 0:
-            print("None")
+            self.debugLog("None")
         else: 
             for characteristic in service.characteristics:
                 await self.printCharacteristicDetails(characteristic)
-            print("______End of characteristics______")
+            self.debugLog("______End of characteristics______")
 
     # Request new data for a specific charateristic
     # Characteristic argument should match the label given to monitorCharacteristics()
