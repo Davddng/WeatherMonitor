@@ -140,12 +140,12 @@ class BLEReader:
 
     # Helper functions to print Bluetooth attributes for debugging
     async def printDescriptorDetails(self, descriptor):
-        self.debugLog("Descriptor: ", descriptor.description)
-        self.debugLog("Descriptor value: ", await self._BLE_CLIENT.read_gatt_descriptor(descriptor.handle))
+        self.debugLog(f"Descriptor: {descriptor.description}")
+        self.debugLog(f"Descriptor value: {await self._BLE_CLIENT.read_gatt_descriptor(descriptor.handle)}")
 
     async def printCharacteristicDetails(self, characteristic):
-        self.debugLog("Characteristic description: ", characteristic.description)
-        self.debugLog("Characteristic UUID: ", characteristic.uuid)
+        self.debugLog(f"Characteristic description: {characteristic.description}")
+        self.debugLog(f"Characteristic UUID: {characteristic.uuid}")
         self.debugLog("Characteristic descriptors: ")
         if len(characteristic.descriptors) == 0:
             self.debugLog("None")
@@ -155,7 +155,7 @@ class BLEReader:
             self.debugLog("______End of descriptors______")
 
     async def printServiceDetails(self, service):
-        self.debugLog("Service description: ", service.description)
+        self.debugLog(f"Service description: {service.description}")
         self.debugLog("List of characteristics in this service:")
         if len(service.characteristics) == 0:
             self.debugLog("None")
