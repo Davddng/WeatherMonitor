@@ -43,6 +43,7 @@ class BLEReader:
                 sleepCounter += 1
                 if sleepCounter >= 30:
                     self.debugLog('Queue empty')
+                    sleepCounter = 0
                 continue
             # if task == -1:
             #     break
