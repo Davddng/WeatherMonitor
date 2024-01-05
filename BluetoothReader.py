@@ -36,14 +36,20 @@ class BLEReader:
         await self.subscribeCharacteristics()
         sleepCounter = 0
         while True:
+            sleepCounter += 1
             try:
+                if sleepCounter >= 30:
+                    self.debugLog("getting task...")
                 task = self.tasks.get_nowait()
             except asyncio.QueueEmpty:
                 await asyncio.sleep(1)
-                sleepCounter += 1
                 if sleepCounter >= 30:
                     self.debugLog('Queue empty')
                     sleepCounter = 0
+                continue
+            except Exception as e:
+                self.debugLog("other error")
+                self.debugLog(str(e))
                 continue
             # if task == -1:
             #     break
