@@ -55,17 +55,19 @@ class BLEReader:
             #     break
             self.debugLog(f'Task Get')
             sendData = struct.pack("<h", int(0))
-            try:
-                self.debugLog(f'Sending {task} request...')
-                await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[task], data=sendData)
-            except:
-                self.ready = False
-                self.debugLog("Bluetooth error, reconnecting...")
-                self.debugLog(f'error!!!')
-                await self.connectToDevice()
-                await self.subscribeCharacteristics()
-                self.ready = True
-        
+            while True:
+                try:
+                    self.debugLog(f'Sending {task} request...')
+                    await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[task], data=sendData)
+                    break
+                except:
+                    self.ready = False
+                    self.debugLog("Bluetooth error, reconnecting...")
+                    self.debugLog(f'error!!!')
+                    await self.connectToDevice()
+                    await self.subscribeCharacteristics()
+                    self.ready = True
+            
         self.debugLog("Error: bluetooth monitoring end reached...")
         await self.unsubscribeCharacteristics()
         await self._BLE_CLIENT.disconnect()
