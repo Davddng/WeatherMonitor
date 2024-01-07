@@ -110,9 +110,15 @@ class BLEReaderThread(BackgroundThread):
         BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
 
     async def handle(self):
+        handleCounter = 0
         while True:
-            if not BLEReaderThread.bluetoothMonitoringTask.done():
-                await BLEReaderThread.bluetoothMonitoringTask
+            handleCounter += 1
+            # BLEReaderThread.bluetoothMonitoringTask.
+            if not BLEReaderThread.bluetoothMonitoringTask.done() or not BLEReaderThread.bluetoothMonitoringTask.cancelled():
+                asyncio.sleep(1)
+                if handleCounter > 30:
+                    logging.info("BLE sleeping...")
+                    handleCounter = 0
             else:
                 logging.info('Bluetooth monitoring task ended. Restarting...')
                 BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
