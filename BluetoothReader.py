@@ -31,8 +31,8 @@ class BLEReader:
     # onUpdate(characteristic, data) = callback function to be called each time a characteristic updates
     #   characteristic - the characteristic that was updated
     #   data - the newly updated data
-    async def subscribeToCharacteristics(self):
-        await self.subscribeCharacteristics()
+    # async def subscribeToCharacteristics(self):
+    #     await self.subscribeCharacteristics()
         # sleepCounter = 0
         # while True:
         #     sleepCounter += 1
@@ -104,6 +104,7 @@ class BLEReader:
         return foundDevices
     
     def clientDisconnectHandler(self, client):
+        self.ready = False
         self.debugLog(f"Client disconnected: {client}")
         # await self.connectToDevice()
         # await self.subscribeCharacteristics()
@@ -183,12 +184,13 @@ class BLEReader:
 
 # Demo example
 async def main():
-    demoReader = BLEReader(onUpdate=updateFn, debug=True)
     characteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Boolean"]
+    demoReader = BLEReader(characteristicList, onUpdate=updateFn, debug=True)
     def updateFn(label, val):
         print(label, "was updated to:", val)
 
     await demoReader.connect(name="28:CD:C1:0D:5C:C0")
+    await demoReader.subscribeToCharacteristics()
 
     async def pollForNewData():
         while True:
