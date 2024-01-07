@@ -115,7 +115,7 @@ class BLEReaderThread(BackgroundThread):
             handleCounter += 1
             # BLEReaderThread.bluetoothMonitoringTask.
             if not BLEReaderThread.bluetoothMonitoringTask.done() or not BLEReaderThread.bluetoothMonitoringTask.cancelled():
-                asyncio.sleep(1)
+                await asyncio.sleep(1)
                 if handleCounter > 30:
                     logging.info("BLE sleeping...")
                     handleCounter = 0
