@@ -185,12 +185,12 @@ class BLEReader:
 # Demo example
 async def main():
     characteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Boolean"]
-    demoReader = BLEReader(characteristicList, onUpdate=updateFn, debug=True)
     def updateFn(label, val):
         print(label, "was updated to:", val)
 
+    demoReader = BLEReader(characteristicList, onUpdate=updateFn, debug=True)
     await demoReader.connect(name="28:CD:C1:0D:5C:C0")
-    await demoReader.subscribeToCharacteristics()
+    await demoReader.subscribeCharacteristics()
 
     async def pollForNewData():
         while True:
@@ -198,7 +198,8 @@ async def main():
                 characteristicListPoll = ["Temperature", "Humidity", "Pressure", "PM1 Concentration"]
                 for characteristic in characteristicListPoll:
                     print("updating ", characteristic)
-                    await demoReader.requestCharacteristic(characteristic)
+                    sendData = struct.pack("<h", int(0))
+                    await demoReader.writeCharToGATT(characteristic, sendData)
                     await asyncio.sleep(0.5)
                 await asyncio.sleep(50)
             else:

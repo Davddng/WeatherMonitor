@@ -172,7 +172,7 @@ async def updateSensorReadings(self):
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
             logging.info(f'Request {characteristic} update...')
-            await BLEReaderThread.bluetooth.tasks.put(characteristic)
+            await BLEReaderThread.taskQueue.put(characteristic)
             # await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
     else:
