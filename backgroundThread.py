@@ -7,6 +7,7 @@ import schedule
 import os
 import signal
 import asyncio
+import struct
 
 from datetime import datetime, timedelta
 from abc import abstractmethod, ABC
@@ -83,10 +84,11 @@ def updateTimestamp(readings):
 class BLEReaderThread(BackgroundThread):
     bluetooth = None
     bluetoothMonitoringTask = None
+    taskQueue=asyncio.Queue()
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # BLEReaderThread.bluetooth = BLEReader(debug=True, taskQueue=kwargs["taskQueue"])
-        BLEReaderThread.bluetooth = BLEReader(debug=True)
+        BLEReaderThread.bluetooth = BLEReader(characteristics=monitorCharacteristicList, onUpdate=self.updateFn, debug=True)
 
     def updateFn(self, label, val):
         logging.info(f'{label} was updated to: {val}')
@@ -107,21 +109,60 @@ class BLEReaderThread(BackgroundThread):
 
     async def startup(self):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
-        BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
+        await BLEReaderThread.bluetooth.subscribeToCharacteristics()
+        # BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring())
 
     async def handle(self):
-        handleCounter = 0
+        # handleCounter = 0
+        # while True:
+        #     handleCounter += 1
+        #     # BLEReaderThread.bluetoothMonitoringTask.
+        #     if not BLEReaderThread.bluetoothMonitoringTask.done() or not BLEReaderThread.bluetoothMonitoringTask.cancelled():
+        #         await asyncio.sleep(1)
+        #         if handleCounter > 30:
+        #             logging.info("BLE sleeping...")
+        #             handleCounter = 0
+        #     else:
+        #         logging.info('Bluetooth monitoring task ended. Restarting...')
+        #         BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring())
+
+        sleepCounter = 0
         while True:
-            handleCounter += 1
-            # BLEReaderThread.bluetoothMonitoringTask.
-            if not BLEReaderThread.bluetoothMonitoringTask.done() or not BLEReaderThread.bluetoothMonitoringTask.cancelled():
+            sleepCounter += 1
+            try:
+                if sleepCounter >= 30:
+                    self.bluetooth.debugLog("getting task...")
+                task = self.taskQueue.get_nowait()
+            except asyncio.QueueEmpty:
                 await asyncio.sleep(1)
-                if handleCounter > 30:
-                    logging.info("BLE sleeping...")
-                    handleCounter = 0
-            else:
-                logging.info('Bluetooth monitoring task ended. Restarting...')
-                BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring(characteristics=monitorCharacteristicList, onUpdate=self.updateFn))
+                if sleepCounter >= 30:
+                    self.bluetooth.debugLog('Queue empty')
+                    sleepCounter = 0
+                continue
+            except Exception as e:
+                self.bluetooth.debugLog("other error")
+                self.bluetooth.debugLog(str(e))
+                continue
+            # if task == -1:
+            #     break
+            self.bluetooth.debugLog(f'Task Get')
+            sendData = struct.pack("<h", int(0))
+            while True:
+                try:
+                    self.bluetooth.debugLog(f'Sending {task} request...')
+                    await self.bluetooth.writeCharToGATT(task, sendData)
+                    break
+                except:
+                    self.bluetooth.ready = False
+                    self.bluetooth.debugLog("Bluetooth error, reconnecting...")
+                    self.bluetooth.debugLog(f'error!!!')
+                    await self.bluetooth.connect(name=bluetoothDeviceName)
+                    await self.bluetooth.subscribeToCharacteristics()
+                    self.bluetooth.ready = True
+            
+        self.debugLog("Error: bluetooth monitoring end reached...")
+        # await self.unsubscribeCharacteristics()
+        # await self._BLE_CLIENT.disconnect()
         
     async def shutdown(self):
         logging.info('Bluetooth thread stopped')

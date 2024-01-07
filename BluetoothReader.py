@@ -5,18 +5,20 @@ from bleak.exc import BleakError
 import struct
 
 class BLEReader:
-    def __init__(self, debug=False, taskQueue=asyncio.Queue()):
+    def __init__(self, characteristics, onUpdate, debug=False, taskQueue=asyncio.Queue()):
         self.debug = debug
         # Queue of bluetooth request tasks
         self.tasks = taskQueue
+        self.onUpdate = onUpdate
+        self.characteristicSearchNames = characteristics
         self.ready = False
+        self.characteristics = {}
+        self.characteristicLabelLookup = {}
 
     # Desc: Connects to a BLE device
     # name = name or address of BLE device to connect
     async def connect(self, name):
         self.deviceName = name
-        self.characteristics = {}
-        self.characteristicLabelLookup = {}
         await self.connectToDevice()
         self.ready = True
 
@@ -29,49 +31,48 @@ class BLEReader:
     # onUpdate(characteristic, data) = callback function to be called each time a characteristic updates
     #   characteristic - the characteristic that was updated
     #   data - the newly updated data
-    async def startMonitoring(self, characteristics, onUpdate):
-        self.characteristicSearchNames = characteristics
-        self.onUpdate = onUpdate
-
+    async def subscribeToCharacteristics(self):
         await self.subscribeCharacteristics()
-        sleepCounter = 0
-        while True:
-            sleepCounter += 1
-            try:
-                if sleepCounter >= 30:
-                    self.debugLog("getting task...")
-                task = self.tasks.get_nowait()
-            except asyncio.QueueEmpty:
-                await asyncio.sleep(1)
-                if sleepCounter >= 30:
-                    self.debugLog('Queue empty')
-                    sleepCounter = 0
-                continue
-            except Exception as e:
-                self.debugLog("other error")
-                self.debugLog(str(e))
-                continue
-            # if task == -1:
-            #     break
-            self.debugLog(f'Task Get')
-            sendData = struct.pack("<h", int(0))
-            while True:
-                try:
-                    self.debugLog(f'Sending {task} request...')
-                    await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[task], data=sendData)
-                    break
-                except:
-                    self.ready = False
-                    self.debugLog("Bluetooth error, reconnecting...")
-                    self.debugLog(f'error!!!')
-                    await self.connectToDevice()
-                    await self.subscribeCharacteristics()
-                    self.ready = True
+        # sleepCounter = 0
+        # while True:
+        #     sleepCounter += 1
+        #     try:
+        #         if sleepCounter >= 30:
+        #             self.debugLog("getting task...")
+        #         task = self.tasks.get_nowait()
+        #     except asyncio.QueueEmpty:
+        #         await asyncio.sleep(1)
+        #         if sleepCounter >= 30:
+        #             self.debugLog('Queue empty')
+        #             sleepCounter = 0
+        #         continue
+        #     except Exception as e:
+        #         self.debugLog("other error")
+        #         self.debugLog(str(e))
+        #         continue
+        #     # if task == -1:
+        #     #     break
+        #     self.debugLog(f'Task Get')
+        #     sendData = struct.pack("<h", int(0))
+        #     while True:
+        #         try:
+        #             self.debugLog(f'Sending {task} request...')
+        #             await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[task], data=sendData)
+        #             break
+        #         except:
+        #             self.ready = False
+        #             self.debugLog("Bluetooth error, reconnecting...")
+        #             self.debugLog(f'error!!!')
+        #             await self.connectToDevice()
+        #             await self.subscribeCharacteristics()
+        #             self.ready = True
             
-        self.debugLog("Error: bluetooth monitoring end reached...")
-        await self.unsubscribeCharacteristics()
-        await self._BLE_CLIENT.disconnect()
+        # self.debugLog("Error: bluetooth monitoring end reached...")
+        # # await self.unsubscribeCharacteristics()
+        # # await self._BLE_CLIENT.disconnect()
 
+    async def writeCharToGATT(self, characteristicName, sendData):
+        await self._BLE_CLIENT.write_gatt_char(char_specifier=self.characteristics[characteristicName], data=sendData)
 
     async def connectToDevice(self):
         # Find and connect to a device matching the name provided
@@ -182,7 +183,7 @@ class BLEReader:
 
 # Demo example
 async def main():
-    demoReader = BLEReader(debug=True)
+    demoReader = BLEReader(onUpdate=updateFn, debug=True)
     characteristicList = ["Temperature", "Humidity", "Pressure", "PM1 Concentration", "PM2.5", "PM10", "Boolean"]
     def updateFn(label, val):
         print(label, "was updated to:", val)
@@ -203,7 +204,7 @@ async def main():
                 await asyncio.sleep(2)
 
     await asyncio.gather(
-        demoReader.startMonitoring(characteristics=characteristicList, onUpdate=updateFn),
+        demoReader.startMonitoring(characteristics=characteristicList),
         pollForNewData()
     )
 
