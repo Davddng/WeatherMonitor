@@ -91,7 +91,7 @@ class BLEReaderThread(BackgroundThread):
         BLEReaderThread.bluetooth = BLEReader(characteristics=monitorCharacteristicList, onUpdate=self.updateFn, debug=True)
 
     def updateFn(self, label, val):
-        logging.info(f'{label} was updated to: {val}')
+        BLEReaderThread.bluetooth.debugLog(f'{label} was updated to: {val}')
         if label == "Temperature":
             self.kwargs["weatherData"].update("temp", val)
         elif label == "Humidity":
