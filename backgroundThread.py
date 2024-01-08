@@ -132,12 +132,16 @@ class BLEReaderThread(BackgroundThread):
             try:
                 if sleepCounter >= 30:
                     self.bluetooth.debugLog("getting task...")
+                else:
+                    self.bluetooth.debugLog("getting task...", level="debug")
                 task = self.taskQueue.get_nowait()
             except asyncio.QueueEmpty:
                 await asyncio.sleep(1)
                 if sleepCounter >= 30:
                     self.bluetooth.debugLog('Queue empty')
                     sleepCounter = 0
+                else:
+                    self.bluetooth.debugLog('Queue empty', level="debug")
                 continue
             except Exception as e:
                 self.bluetooth.debugLog("other error")
