@@ -171,7 +171,7 @@ async def updateSensorReadings(self):
     # Get new sensor readings from bluetooth sensors or from locally attached sensors
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
-            BLEReader.debugLog(f'Request {characteristic} update...')
+            BLEReaderThread.bluetooth.debugLog(f'Request {characteristic} update...')
             await BLEReaderThread.taskQueue.put(characteristic)
             # await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
@@ -179,7 +179,7 @@ async def updateSensorReadings(self):
         readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
         readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         readTempHumid(self.kwargs['weatherData'])
-        BLEReader.debugLog(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
+        BLEReaderThread.bluetooth.debugLog(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     await BackgroundThreadFactory.startThread(name='takePicture', **self.kwargs)
     now = datetime.now()
@@ -198,7 +198,7 @@ class weatherSampler(BackgroundThread):
         return dt + (datetime.min - dt) % delta
 
     async def startup(self):
-        BLEReader.debugLog('Weather sampling thread started')
+        BLEReaderThread.bluetooth.debugLog('Weather sampling thread started')
         weatherSampler.nextSamplingDateTime = datetime.now()
         if not self.kwargs["bt"]:
             self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
@@ -216,7 +216,7 @@ class weatherSampler(BackgroundThread):
         setSensorState(False)
         
     async def shutdown(self):
-        BLEReader.debugLog('Weather sampling thread stopped')
+        BLEReaderThread.bluetooth.debugLog('Weather sampling thread stopped')
         setSensorState(False)
 
     async def handle(self):
@@ -225,7 +225,7 @@ class weatherSampler(BackgroundThread):
             if now > weatherSampler.nextSamplingDateTime:
                 await updateSensorReadings(self)
                 weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
-                BLEReader.debugLog(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
+                BLEReaderThread.bluetooth.debugLog(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
             await asyncio.sleep(1)
 
 class updateWeather(BackgroundThread):
@@ -234,27 +234,27 @@ class updateWeather(BackgroundThread):
         super().__init__(**kwargs)
 
     async def startup(self):
-        BLEReader.debugLog('Sensor readings refreshing...')
+        BLEReaderThread.bluetooth.debugLog('Sensor readings refreshing...')
         if self.kwargs["bt"]:
             updateWeather.updateSensorTask = asyncio.create_task(updateSensorReadings(self))
         else:
             self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         
     async def shutdown(self):
-        BLEReader.debugLog('Weather update thread stopped')
+        BLEReaderThread.bluetooth.debugLog('Weather update thread stopped')
         setSensorState(False)
 
     async def handle(self):
         await updateWeather.updateSensorTask
-        BLEReader.debugLog(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
+        BLEReaderThread.bluetooth.debugLog(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
 
 
 class takeNewPhoto(BackgroundThread):
     async def startup(self) -> None:
-        BLEReader.debugLog('Taking photo...')
+        BLEReaderThread.bluetooth.debugLog('Taking photo...')
         
     async def shutdown(self) -> None:
-        BLEReader.debugLog('Photo thread stopped')
+        BLEReaderThread.bluetooth.debugLog('Photo thread stopped')
 
     async def handle(self) -> None:
         now = datetime.now()
@@ -264,7 +264,7 @@ class takeNewPhoto(BackgroundThread):
         relativePath = pathToWebServer + pathWithinWebServer
         takePhoto(relativePath, name)
         self.kwargs["weatherData"].update("photoPath", pathWithinWebServer + name)
-        BLEReader.debugLog('Photo saved to: ' + relativePath + name)
+        BLEReaderThread.bluetooth.debugLog('Photo saved to: ' + relativePath + name)
 
 
 class BackgroundThreadFactory:
@@ -308,4 +308,4 @@ class BackgroundThreadFactory:
             try:
                 signal.signal(signal.SIGINT, sigint_handler)
             except ValueError as e:
-                BLEReader.debugLog(f'{e}. Continuing execution...')
+                BLEReaderThread.bluetooth.debugLog(f'{e}. Continuing execution...')
