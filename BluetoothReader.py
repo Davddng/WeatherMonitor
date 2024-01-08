@@ -26,6 +26,7 @@ class BLEReader:
     def debugLog(self, str):
         # logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG, force=True)
         if self.debug:
+            print(str)
             logging.info(str)
 
     # Desc: Starts monitoring provided characteristics for changes
