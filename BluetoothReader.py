@@ -14,7 +14,7 @@ class BLEReader:
         self.ready = False
         self.characteristics = {}
         self.characteristicLabelLookup = {}
-        logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG)
+        logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG, force=True)
 
     # Desc: Connects to a BLE device
     # name = name or address of BLE device to connect
@@ -24,7 +24,7 @@ class BLEReader:
         self.ready = True
 
     def debugLog(self, str):
-        logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG)
+        # logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG, force=True)
         if self.debug:
             logging.info(str)
 
