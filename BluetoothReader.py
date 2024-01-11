@@ -14,6 +14,7 @@ class BLEReader:
         self.ready = False
         self.characteristics = {}
         self.characteristicLabelLookup = {}
+        logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG, force=True)
 
     # Desc: Connects to a BLE device
     # name = name or address of BLE device to connect
@@ -22,9 +23,15 @@ class BLEReader:
         await self.connectToDevice()
         self.ready = True
 
-    def debugLog(self, str):
+    def debugLog(self, str, level="info"):
+        # logging.basicConfig(filename='system.log', encoding='utf-8', level=logging.DEBUG, force=True)
         if self.debug:
-            logging.info(str)
+            if level == "info":    
+                print(str)
+                logging.info(str)
+            if level == "debug":
+                logging.debug(str)
+
 
     # Desc: Starts monitoring provided characteristics for changes
     # characteristics = Bluetooth characteristics to monitor

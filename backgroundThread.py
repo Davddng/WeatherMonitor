@@ -91,7 +91,7 @@ class BLEReaderThread(BackgroundThread):
         BLEReaderThread.bluetooth = BLEReader(characteristics=monitorCharacteristicList, onUpdate=self.updateFn, debug=True)
 
     def updateFn(self, label, val):
-        logging.info(f'{label} was updated to: {val}')
+        BLEReaderThread.bluetooth.debugLog(f'{label} was updated to: {val}')
         if label == "Temperature":
             self.kwargs["weatherData"].update("temp", val)
         elif label == "Humidity":
@@ -132,12 +132,16 @@ class BLEReaderThread(BackgroundThread):
             try:
                 if sleepCounter >= 30:
                     self.bluetooth.debugLog("getting task...")
+                else:
+                    self.bluetooth.debugLog("getting task...", level="debug")
                 task = self.taskQueue.get_nowait()
             except asyncio.QueueEmpty:
                 await asyncio.sleep(1)
                 if sleepCounter >= 30:
                     self.bluetooth.debugLog('Queue empty')
                     sleepCounter = 0
+                else:
+                    self.bluetooth.debugLog('Queue empty', level="debug")
                 continue
             except Exception as e:
                 self.bluetooth.debugLog("other error")
@@ -164,14 +168,14 @@ class BLEReaderThread(BackgroundThread):
         # await self._BLE_CLIENT.disconnect()
         
     async def shutdown(self):
-        logging.info('Bluetooth thread stopped')
+        self.bluetooth.debugLog('Bluetooth thread stopped')
 
 
 async def updateSensorReadings(self):
     # Get new sensor readings from bluetooth sensors or from locally attached sensors
     if self.kwargs["bt"]:
         for characteristic in pollCharacteristicList:
-            logging.info(f'Request {characteristic} update...')
+            BLEReaderThread.bluetooth.debugLog(f'Request {characteristic} update...')
             await BLEReaderThread.taskQueue.put(characteristic)
             # await self.kwargs["taskQueue"].put(characteristic)
             await asyncio.sleep(0.05)
@@ -179,7 +183,7 @@ async def updateSensorReadings(self):
         readAirQuality(self.PMS7003_SER, self.kwargs['weatherData'], 30)
         readTempPres(self.BMP280_I2C, self.kwargs['weatherData'])
         readTempHumid(self.kwargs['weatherData'])
-        logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
+        BLEReaderThread.bluetooth.debugLog(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
         
     await BackgroundThreadFactory.startThread(name='takePicture', **self.kwargs)
     now = datetime.now()
@@ -198,7 +202,7 @@ class weatherSampler(BackgroundThread):
         return dt + (datetime.min - dt) % delta
 
     async def startup(self):
-        logging.info('Weather sampling thread started')
+        BLEReaderThread.bluetooth.debugLog('Weather sampling thread started')
         weatherSampler.nextSamplingDateTime = datetime.now()
         if not self.kwargs["bt"]:
             self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
@@ -216,7 +220,7 @@ class weatherSampler(BackgroundThread):
         setSensorState(False)
         
     async def shutdown(self):
-        logging.info('Weather sampling thread stopped')
+        BLEReaderThread.bluetooth.debugLog('Weather sampling thread stopped')
         setSensorState(False)
 
     async def handle(self):
@@ -225,7 +229,7 @@ class weatherSampler(BackgroundThread):
             if now > weatherSampler.nextSamplingDateTime:
                 await updateSensorReadings(self)
                 weatherSampler.nextSamplingDateTime = self.ceil_dt(now, timedelta(minutes=10))
-                logging.info(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
+                BLEReaderThread.bluetooth.debugLog(f'Next weather sample at {weatherSampler.nextSamplingDateTime.hour}:{weatherSampler.nextSamplingDateTime.minute}')
             await asyncio.sleep(1)
 
 class updateWeather(BackgroundThread):
@@ -234,27 +238,27 @@ class updateWeather(BackgroundThread):
         super().__init__(**kwargs)
 
     async def startup(self):
-        logging.info('Sensor readings refreshing...')
+        BLEReaderThread.bluetooth.debugLog('Sensor readings refreshing...')
         if self.kwargs["bt"]:
             updateWeather.updateSensorTask = asyncio.create_task(updateSensorReadings(self))
         else:
             self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
         
     async def shutdown(self):
-        logging.info('Weather update thread stopped')
+        BLEReaderThread.bluetooth.debugLog('Weather update thread stopped')
         setSensorState(False)
 
     async def handle(self):
         await updateWeather.updateSensorTask
-        logging.info(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
+        BLEReaderThread.bluetooth.debugLog(f'Weather data updated at {self.kwargs["weatherData"].data["timestamp"]}')
 
 
 class takeNewPhoto(BackgroundThread):
     async def startup(self) -> None:
-        logging.info('Taking photo...')
+        BLEReaderThread.bluetooth.debugLog('Taking photo...')
         
     async def shutdown(self) -> None:
-        logging.info('Photo thread stopped')
+        BLEReaderThread.bluetooth.debugLog('Photo thread stopped')
 
     async def handle(self) -> None:
         now = datetime.now()
@@ -264,7 +268,7 @@ class takeNewPhoto(BackgroundThread):
         relativePath = pathToWebServer + pathWithinWebServer
         takePhoto(relativePath, name)
         self.kwargs["weatherData"].update("photoPath", pathWithinWebServer + name)
-        logging.info('Photo saved to: ' + relativePath + name)
+        BLEReaderThread.bluetooth.debugLog('Photo saved to: ' + relativePath + name)
 
 
 class BackgroundThreadFactory:
@@ -308,4 +312,4 @@ class BackgroundThreadFactory:
             try:
                 signal.signal(signal.SIGINT, sigint_handler)
             except ValueError as e:
-                logging.error(f'{e}. Continuing execution...')
+                BLEReaderThread.bluetooth.debugLog(f'{e}. Continuing execution...')
