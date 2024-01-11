@@ -202,7 +202,7 @@ class weatherSampler(BackgroundThread):
         return dt + (datetime.min - dt) % delta
 
     async def startup(self):
-        BLEReaderThread.bluetooth.debugLog('Weather sampling thread started')
+        logging.info('Weather sampling thread started')
         weatherSampler.nextSamplingDateTime = datetime.now()
         if not self.kwargs["bt"]:
             self.PMS7003_SER = serial.Serial("/dev/ttyS0", 9600)
