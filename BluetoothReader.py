@@ -91,6 +91,10 @@ class BLEReader:
                 self.debugLog(f"Connected to: {foundDevices[0].name}")
             except TimeoutError:
                 self.debugLog("BT timeout, retrying...")
+            except Exception as e:
+                self.debugLog("Connect error")
+                self.debugLog(str(e))
+                self.debugLog("Retrying...")
 
     # Scans nearby bluetooth BLE devices for name or address that matches input 
     async def searchBLEDeviceName(self, name):
@@ -144,7 +148,13 @@ class BLEReader:
                     self.characteristicLabelLookup[characteristic.uuid] = targetCharacteristic
         
         for name, characteristic in self.characteristics.items():
-            await self._BLE_CLIENT.start_notify(characteristic.uuid, self.characteristicUpdate)
+            try:
+                async with asyncio.timeout(1):
+                    await self._BLE_CLIENT.start_notify(characteristic.uuid, self.characteristicUpdate)
+            except Exception as e:
+                self.debugLog("Subscribe error")
+                self.debugLog(str(e))
+                
 
     async def unsubscribeCharacteristics(self):
         for name, characteristic in self.characteristics.items():
@@ -167,7 +177,9 @@ class BLEReader:
                     self.debugLog("Bluetooth Not Connected")
         except TimeoutError:
             self.debugLog("Bluetooth Timeout")
-            
+        except Exception as e:
+            self.debugLog("Print error")
+            self.debugLog(str(e))
 
     async def printCharacteristicDetails(self, characteristic):
         self.debugLog(f"Characteristic description: {characteristic.description}")
