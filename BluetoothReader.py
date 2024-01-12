@@ -111,16 +111,15 @@ class BLEReader:
 
             if len(foundDevices) == 0:
                 self.debugLog(f"No devices found matching '{name}'. Searching again...")
-
+        self.foundDevices = foundDevices
         return foundDevices
     
-    async def clientDisconnectHandler(self, client):
+    def clientDisconnectHandler(self, client):
         self.ready = False
         self.debugLog(f"Client disconnected: {client}")
-        foundDevices = await self.searchBLEDeviceName(self.deviceName)
-        self._BLE_CLIENT = BleakClient(address_or_ble_device = foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
+        self._BLE_CLIENT = BleakClient(address_or_ble_device = self.foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
         # await self.connectToDevice()
-        await self.subscribeCharacteristics(debug=False)
+        asyncio.run(self.subscribeCharacteristics(debug=False))
 
     async def subscribeCharacteristics(self, debug = True):
         if debug:
