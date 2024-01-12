@@ -119,7 +119,7 @@ class BLEReader:
         self.debugLog(f"Client disconnected: {client}")
         self._BLE_CLIENT = BleakClient(address_or_ble_device = self.foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
         # await self.connectToDevice()
-        asyncio.run(self.subscribeCharacteristics(debug=False))
+        # asyncio.run(self.subscribeCharacteristics(debug=False))
 
     async def subscribeCharacteristics(self, debug = True):
         if debug:
@@ -152,6 +152,7 @@ class BLEReader:
         for name, characteristic in self.characteristics.items():
             try:
                 async with asyncio.timeout(1):
+                    await self._BLE_CLIENT.stop_notify(characteristic.uuid)
                     await self._BLE_CLIENT.start_notify(characteristic.uuid, self.characteristicUpdate)
             except Exception as e:
                 self.debugLog("Subscribe error")
