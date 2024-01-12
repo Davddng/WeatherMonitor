@@ -159,10 +159,15 @@ class BLEReader:
     # Helper functions to print Bluetooth attributes for debugging
     async def printDescriptorDetails(self, descriptor):
         self.debugLog(f"Descriptor: {descriptor.description}")
-        if self._BLE_CLIENT.is_connected:
-            self.debugLog(f"Descriptor value: {await self._BLE_CLIENT.read_gatt_descriptor(descriptor.handle)}")
-        else:
-            self.debugLog("Bluetooth Not Connected")
+        try:
+            async with asyncio.timeout(1):
+                if self._BLE_CLIENT.is_connected:
+                    self.debugLog(f"Descriptor value: {await self._BLE_CLIENT.read_gatt_descriptor(descriptor.handle)}")
+                else:
+                    self.debugLog("Bluetooth Not Connected")
+        except TimeoutError:
+            self.debugLog("Bluetooth Timeout")
+            
 
     async def printCharacteristicDetails(self, characteristic):
         self.debugLog(f"Characteristic description: {characteristic.description}")

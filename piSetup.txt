@@ -45,3 +45,7 @@ Ctrl+A, d
 
 To reattach session:
 screen –r [screen_ID/screen_name]
+
+Copy log file from server to local
+scp username@b:/path/to/file /path/to/destination
+scp david@192.168.1.178:~/Documents/Projects/WeatherMonitor/system.log system.log
