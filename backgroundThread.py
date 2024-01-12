@@ -158,11 +158,19 @@ class BLEReaderThread(BackgroundThread):
                     break
                 except:
                     self.bluetooth.ready = False
-                    self.bluetooth.debugLog("Bluetooth error, reconnecting...")
-                    await self.bluetooth.connect(name=bluetoothDeviceName)
-                    await self.bluetooth.subscribeCharacteristics()
-                    self.bluetooth.ready = True
-            
+                    while not self.bluetooth.ready:
+                        try:
+                            self.bluetooth.debugLog("Bluetooth error, reconnecting...")
+                            await self.bluetooth.connect(name=bluetoothDeviceName)
+                            await self.bluetooth.subscribeCharacteristics()
+                            self.bluetooth.ready = True
+                        except Exception as e:
+                            self.bluetooth.debugLog("Bluetooth reconnect exception")
+                            self.bluetooth.debugLog(str(e))
+                            self.bluetooth.debugLog("Retrying......")
+
+
+
         self.debugLog("Error: bluetooth monitoring end reached...")
         # await self.unsubscribeCharacteristics()
         # await self._BLE_CLIENT.disconnect()
