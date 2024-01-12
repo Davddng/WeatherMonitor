@@ -130,7 +130,7 @@ class BLEReaderThread(BackgroundThread):
         while True:
             sleepCounter += 1
             try:
-                async with asyncio.timeout(1):
+                async with asyncio.timeout(10):
                     if not self.bluetooth.ready:
                         await self.bluetooth.connect(name=bluetoothDeviceName)
                         await self.bluetooth.subscribeCharacteristics(debug=False)
