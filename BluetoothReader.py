@@ -114,26 +114,29 @@ class BLEReader:
 
         return foundDevices
     
-    def clientDisconnectHandler(self, client):
+    async def clientDisconnectHandler(self, client):
         self.ready = False
         self.debugLog(f"Client disconnected: {client}")
+        foundDevices = await self.searchBLEDeviceName(self.deviceName)
+        self._BLE_CLIENT = BleakClient(address_or_ble_device = foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
         # await self.connectToDevice()
-        # await self.subscribeCharacteristics()
+        await self.subscribeCharacteristics(debug=False)
 
-    async def subscribeCharacteristics(self):
-        self.debugLog("Descriptors: ")
-        if len(self._BLE_CLIENT.services.descriptors) == 0:
-            self.debugLog("None")
-        for descriptorNumber in self._BLE_CLIENT.services.descriptors:
-            descriptor = self._BLE_CLIENT.services.get_descriptor(descriptorNumber)
-            await self.printDescriptorDetails(descriptor)
-        
-        self.debugLog("Services: ")
-        if len(self._BLE_CLIENT.services.services) == 0:
-            self.debugLog("None")
-        for serviceNumber in self._BLE_CLIENT.services.services:
-            service = self._BLE_CLIENT.services.get_service(serviceNumber)
-            await self.printServiceDetails(service)
+    async def subscribeCharacteristics(self, debug = True):
+        if debug:
+            self.debugLog("Descriptors: ")
+            if len(self._BLE_CLIENT.services.descriptors) == 0:
+                self.debugLog("None")
+            for descriptorNumber in self._BLE_CLIENT.services.descriptors:
+                descriptor = self._BLE_CLIENT.services.get_descriptor(descriptorNumber)
+                await self.printDescriptorDetails(descriptor)
+            
+            self.debugLog("Services: ")
+            if len(self._BLE_CLIENT.services.services) == 0:
+                self.debugLog("None")
+            for serviceNumber in self._BLE_CLIENT.services.services:
+                service = self._BLE_CLIENT.services.get_service(serviceNumber)
+                await self.printServiceDetails(service)
         
         for serviceNumber in self._BLE_CLIENT.services.services:
             service = self._BLE_CLIENT.services.get_service(serviceNumber)
