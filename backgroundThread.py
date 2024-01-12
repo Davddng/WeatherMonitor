@@ -109,7 +109,7 @@ class BLEReaderThread(BackgroundThread):
 
     async def startup(self):
         await BLEReaderThread.bluetooth.connect(name=bluetoothDeviceName)
-        await BLEReaderThread.bluetooth.subscribeCharacteristics()
+        await BLEReaderThread.bluetooth.subscribeCharacteristics(debug=False)
         # BLEReaderThread.bluetoothMonitoringTask = asyncio.create_task(BLEReaderThread.bluetooth.startMonitoring())
 
     async def handle(self):
@@ -162,7 +162,7 @@ class BLEReaderThread(BackgroundThread):
                         try:
                             self.bluetooth.debugLog("Bluetooth error, reconnecting...")
                             await self.bluetooth.connect(name=bluetoothDeviceName)
-                            await self.bluetooth.subscribeCharacteristics()
+                            await self.bluetooth.subscribeCharacteristics(debug=False)
                             self.bluetooth.ready = True
                         except Exception as e:
                             self.bluetooth.debugLog("Bluetooth reconnect exception")
