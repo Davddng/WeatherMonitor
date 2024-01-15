@@ -83,12 +83,14 @@ class BLEReader:
 
     async def connectToDevice(self):
         # Find and connect to a device matching the name provided
-        while not self._BLE_CLIENT.is_connected:
+        while True:
             try:
                 foundDevices = await self.searchBLEDeviceName(self.deviceName)
                 self._BLE_CLIENT = BleakClient(address_or_ble_device = foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
                 await self._BLE_CLIENT.connect()
                 self.debugLog(f"Connected to: {foundDevices[0].name}")
+                if self._BLE_CLIENT.is_connected:
+                    break
             except TimeoutError:
                 self.debugLog("BT timeout, retrying...")
             except Exception as e:
