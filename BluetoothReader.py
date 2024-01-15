@@ -85,7 +85,7 @@ class BLEReader:
         # Find and connect to a device matching the name provided
         while True:
             try:
-                async with asyncio.timeout(10):
+                async with asyncio.timeout(20):
                     foundDevices = await self.searchBLEDeviceName(self.deviceName)
                     self._BLE_CLIENT = BleakClient(address_or_ble_device = foundDevices[0], disconnected_callback = self.clientDisconnectHandler)
                     await self._BLE_CLIENT.connect()
