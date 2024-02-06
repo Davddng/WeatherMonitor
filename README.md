@@ -1,5 +1,5 @@
 Samples weather data from attached sensors in 10 minute intervals. 
-Hosts website and API to access collected sensor readings at http://<device IP address>:5000
+Hosts website and API to access collected sensor readings at http://(device IP address):5000
 
 Sensors used for this project:
 DHT-22 (humidity and temperature)
